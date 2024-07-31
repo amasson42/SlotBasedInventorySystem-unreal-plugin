@@ -8,7 +8,7 @@
 
 
 USTRUCT(BlueprintType)
-struct FInventorySlot
+struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot
 {
 	GENERATED_USTRUCT_BODY()
 

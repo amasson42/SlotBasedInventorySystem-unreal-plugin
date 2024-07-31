@@ -24,4 +24,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SlotInventory|Slot")
 	static bool IsEmptySlot(const FInventorySlot& Slot);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SlotInventory|Component")
+	static class USlotInventoryComponent* GetInventoryComponent(UObject* Holder, FName InventoryTag);
+
 };

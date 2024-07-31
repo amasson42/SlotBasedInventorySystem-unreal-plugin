@@ -2,6 +2,8 @@
 
 
 #include "SlotInventoryBlueprintLibrary.h"
+#include "Components/SlotInventoryComponent.h"
+#include "Interfaces/InventoryHolderInterface.h"
 
 
 bool USlotInventoryBlueprintLibrary::IsValidIndex(const FInventoryContent& Content, int32 Index)
@@ -12,4 +14,17 @@ bool USlotInventoryBlueprintLibrary::IsValidIndex(const FInventoryContent& Conte
 bool USlotInventoryBlueprintLibrary::IsEmptySlot(const FInventorySlot& Slot)
 {
     return Slot.IsEmpty();
+}
+
+USlotInventoryComponent* USlotInventoryBlueprintLibrary::GetInventoryComponent(UObject* Holder, FName InventoryTag)
+{
+    if (Holder->GetClass()->ImplementsInterface(UInventoryHolderInterface::StaticClass()))
+    {
+        return IInventoryHolderInterface::Execute_GetInventoryComponent(Holder, InventoryTag);
+    }
+    else if (AActor* Actor = Cast<AActor>(Holder))
+    {
+        return Actor->FindComponentByClass<USlotInventoryComponent>();
+    }
+    return nullptr;
 }
