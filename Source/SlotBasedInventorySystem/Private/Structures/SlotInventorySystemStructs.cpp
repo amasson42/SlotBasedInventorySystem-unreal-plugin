@@ -8,16 +8,17 @@
 
 bool FInventorySlot::IsEmpty() const
 {
-    return ID == NAME_None || Count == 0;
+    return (ID == NAME_None || Count == 0) && Modifiers.IsEmpty();
 }
 
 void FInventorySlot::Reset()
 {
     ID = NAME_None;
     Count = 0;
+    Modifiers.Reset();
 }
 
-void FInventorySlot::ModifyCountWithOverflow(int32 ModifyAmount, int32& Overflow, uint8 MaxStackSize)
+void FInventorySlot::ModifyCountWithOverflow(int32 ModifyAmount, int32& Overflow, int32 MaxStackSize)
 {
     int32 NewCount = Count + ModifyAmount;
 
@@ -38,7 +39,7 @@ void FInventorySlot::ModifyCountWithOverflow(int32 ModifyAmount, int32& Overflow
     }
 }
 
-bool FInventorySlot::TryModifyCountByExact(int32 ModifyAmount, uint8 MaxStackSize)
+bool FInventorySlot::TryModifyCountByExact(int32 ModifyAmount, int32 MaxStackSize)
 {
     int32 NewCount = Count + ModifyAmount;
 
@@ -49,7 +50,7 @@ bool FInventorySlot::TryModifyCountByExact(int32 ModifyAmount, uint8 MaxStackSiz
     return true;
 }
 
-bool FInventorySlot::AddIdAndCount(const FName& SlotId, int32 ModifyAmount, int32& Overflow, uint8 MaxStackSize)
+bool FInventorySlot::AddIdAndCount(const FName& SlotId, int32 ModifyAmount, int32& Overflow, int32 MaxStackSize)
 {
     if (IsEmpty())
     {
@@ -104,7 +105,7 @@ FInventoryContent::FContentModificationResult::FContentModificationResult(TSet<i
     ModifiedSlots(InModifiedSlots), Overflows(InOverflows)
 {}
 
-void FInventoryContent::ModifyContentWithValues(const TMap<FName, int32>& IdsAndCounts, const TMap<FName, uint8>& MaxStackSizes, FContentModificationResult& ModificationResult)
+void FInventoryContent::ModifyContentWithValues(const TMap<FName, int32>& IdsAndCounts, const TMap<FName, int32>& MaxStackSizes, FContentModificationResult& ModificationResult)
 {
     bool bModified = false;
     bool bHasPositiveOverflow = false;
@@ -114,7 +115,7 @@ void FInventoryContent::ModifyContentWithValues(const TMap<FName, int32>& IdsAnd
     {
         const FName& SlotId = IdAndCount.Key;
         int32 ModifyAmount = IdAndCount.Value;
-        const uint8 MaxStackSize = MaxStackSizes[SlotId];
+        const int32 MaxStackSize = MaxStackSizes[SlotId];
 
         FContentModificationResult Result(ModificationResult.ModifiedSlots, nullptr);
         ReceiveSlotOverflow(SlotId, ModifyAmount, MaxStackSize, false, Result);
@@ -142,7 +143,7 @@ void FInventoryContent::ModifyContentWithValues(const TMap<FName, int32>& IdsAnd
     }
 }
 
-void FInventoryContent::ReceiveSlotOverflow(const FName& SlotId, int32& InoutOverflow, uint8 MaxStackSize, bool bTargetEmptySlots, FContentModificationResult& ModificationResult)
+void FInventoryContent::ReceiveSlotOverflow(const FName& SlotId, int32& InoutOverflow, int32 MaxStackSize, bool bTargetEmptySlots, FContentModificationResult& ModificationResult)
 {
     for (int32 i = 0; i < Slots.Num() && InoutOverflow != 0; i++)
     {
@@ -162,7 +163,7 @@ void FInventoryContent::ReceiveSlotOverflow(const FName& SlotId, int32& InoutOve
     }
 }
 
-bool FInventoryContent::ReceiveSlotAtIndex(FInventorySlot& InoutSlot, int32 Index, uint8 MaxStackSize, uint8 MaxTransferAmount)
+bool FInventoryContent::ReceiveSlotAtIndex(FInventorySlot& InoutSlot, int32 Index, int32 MaxStackSize, int32 MaxTransferAmount)
 {
     FInventorySlot* LocalSlot = GetSlotPtrAtIndex(Index);
     if (!LocalSlot)
@@ -193,7 +194,7 @@ bool FInventoryContent::ReceiveSlotAtIndex(FInventorySlot& InoutSlot, int32 Inde
     return true;
 }
 
-void FInventoryContent::RegroupSlotsWithSimilarIdsAtIndex(int32 Index, FContentModificationResult& ModificationResult, uint8 MaxStackSize, FInventorySlot* CachedSlotPtr)
+void FInventoryContent::RegroupSlotsWithSimilarIdsAtIndex(int32 Index, FContentModificationResult& ModificationResult, int32 MaxStackSize, FInventorySlot* CachedSlotPtr)
 {
     FInventorySlot* TargetSlot = CachedSlotPtr ? CachedSlotPtr : GetSlotPtrAtIndex(Index);
 
@@ -231,7 +232,7 @@ void FInventoryContent::RegroupSlotsWithSimilarIdsAtIndex(int32 Index, FContentM
             ModificationResult.ModifiedSlots->Add(Index);
 }
 
-bool FInventoryContent::MergeSlotsWithSimilarIds(FInventorySlot& DestinationSlot, FInventorySlot& SourceSlot, uint8 MaxStackSize, uint8 MaxTransferAmount)
+bool FInventoryContent::MergeSlotsWithSimilarIds(FInventorySlot& DestinationSlot, FInventorySlot& SourceSlot, int32 MaxStackSize, int32 MaxTransferAmount)
 {
     checkf(SourceSlot.ID == DestinationSlot.ID, TEXT("Tried to merge slots with different Ids (%s!=%s)"), *SourceSlot.ID.ToString(), *DestinationSlot.ID.ToString());
 

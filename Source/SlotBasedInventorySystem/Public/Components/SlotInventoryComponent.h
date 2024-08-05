@@ -65,10 +65,10 @@ public:
 	void ModifySlotCountAtIndex(int32 Index, int32 ModifyAmount, bool bAllOrNothing, int32& Overflow);
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Count")
-	virtual uint8 GetMaxStackSizeForID(const FName& ID) const;
+	virtual int32 GetMaxStackSizeForID(const FName& ID) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Count")
-	void GetMaxStackSizeForIds(const TSet<FName>& Ids, TMap<FName, uint8>& MaxStackSizes) const;
+	void GetMaxStackSizeForIds(const TSet<FName>& Ids, TMap<FName, int32>& MaxStackSizes) const;
 
 
 	/** Content Management */
@@ -83,7 +83,7 @@ public:
 	bool TryModifyContentWithoutOverflow(const TMap<FName, int32>& IdsAndCounts);
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Action")
-	bool DropSlotTowardOtherInventoryAtIndex(int32 SourceIndex, USlotInventoryComponent* Destination, int32 DestinationIndex, uint8 MaxAmount = 255);
+	bool DropSlotTowardOtherInventoryAtIndex(int32 SourceIndex, USlotInventoryComponent* Destination, int32 DestinationIndex, int32 MaxAmount = 255);
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Action")
 	bool DropSlotTowardOtherInventory(int32 SourceIndex, USlotInventoryComponent* Destination);
@@ -96,7 +96,7 @@ protected:
 
 	/** Content Management */
 
-	const TMap<FName, uint8> GetMaxStackSizesFromIds(const TMap<FName, int32>& IdsAndCounts) const;
+	const TMap<FName, int32> GetMaxStackSizesFromIds(const TMap<FName, int32>& IdsAndCounts) const;
 
 
 	/** Slot Updating */

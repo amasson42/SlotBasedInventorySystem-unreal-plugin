@@ -17,14 +17,17 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot
 	FName ID;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
-	uint8 Count = 0;
+	int32 Count = 0;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Instanced)
+    TArray<TObjectPtr<class USlotModifier>> Modifiers;
 
 
 	bool IsEmpty() const;
 	void Reset();
-	void ModifyCountWithOverflow(int32 ModifyAmount, int32& Overflow, uint8 MaxStackSize = 255);
-	bool TryModifyCountByExact(int32 ModifyAmount, uint8 MaxStackSize = 255);
-	bool AddIdAndCount(const FName& SlotId, int32 ModifyAmount, int32& Overflow, uint8 MaxStackSize = 255);
+	void ModifyCountWithOverflow(int32 ModifyAmount, int32& Overflow, int32 MaxStackSize = 255);
+	bool TryModifyCountByExact(int32 ModifyAmount, int32 MaxStackSize = 255);
+	bool AddIdAndCount(const FName& SlotId, int32 ModifyAmount, int32& Overflow, int32 MaxStackSize = 255);
 
 };
 
@@ -54,14 +57,14 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventoryContent
 		FContentModificationResult(TSet<int32>* InModifiedSlots, TMap<FName, int32>* Overflows);
 	};
 
-	void ModifyContentWithValues(const TMap<FName, int32>& IdsAndCounts, const TMap<FName, uint8>& MaxStackSizes, FContentModificationResult& ModificationResult);
+	void ModifyContentWithValues(const TMap<FName, int32>& IdsAndCounts, const TMap<FName, int32>& MaxStackSizes, FContentModificationResult& ModificationResult);
 
-	void ReceiveSlotOverflow(const FName& SlotId, int32& InoutOverflow, uint8 MaxStackSize, bool bTargetEmptySlots, FContentModificationResult& ModificationResult);
-	bool ReceiveSlotAtIndex(FInventorySlot& InoutSlot, int32 Index, uint8 MaxStackSize = 255, uint8 MaxTransferAmount = 255);
+	void ReceiveSlotOverflow(const FName& SlotId, int32& InoutOverflow, int32 MaxStackSize, bool bTargetEmptySlots, FContentModificationResult& ModificationResult);
+	bool ReceiveSlotAtIndex(FInventorySlot& InoutSlot, int32 Index, int32 MaxStackSize = 255, int32 MaxTransferAmount = 255);
 
-	void RegroupSlotsWithSimilarIdsAtIndex(int32 Index, FContentModificationResult& ModificationResult, uint8 MaxStackSize = 255, FInventorySlot* CachedSlotPtr = nullptr);
+	void RegroupSlotsWithSimilarIdsAtIndex(int32 Index, FContentModificationResult& ModificationResult, int32 MaxStackSize = 255, FInventorySlot* CachedSlotPtr = nullptr);
 
-	static bool MergeSlotsWithSimilarIds(FInventorySlot& DestinationSlot, FInventorySlot& SourceSlot, uint8 MaxStackSize = 255, uint8 MaxTransferAmount = 255);
+	static bool MergeSlotsWithSimilarIds(FInventorySlot& DestinationSlot, FInventorySlot& SourceSlot, int32 MaxStackSize = 255, int32 MaxTransferAmount = 255);
 
 	static void SwapSlots(FInventorySlot& FirstSlot, FInventorySlot& SecondSlot);
 

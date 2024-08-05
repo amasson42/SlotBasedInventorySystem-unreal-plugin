@@ -38,19 +38,19 @@ public:
 	void Server_RequestClearSlotAtIndex(int32 Index);
 
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "ClientRequest|Action|Drop")
-	void Server_RequestDropSlotTowardOtherInventoryAtIndex(int32 SourceIndex, USlotInventoryComponent* DestinationInventory, int32 DestinationIndex, uint8 MaxAmount = 255);
+	void Server_RequestDropSlotTowardOtherInventoryAtIndex(int32 SourceIndex, USlotInventoryComponent* DestinationInventory, int32 DestinationIndex, int32 MaxAmount = 255);
 
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "ClientRequest|Action|Drop")
 	void Server_RequestDropSlotTowardOtherInventory(int32 SourceIndex, USlotInventoryComponent* DestinationInventory);
 
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "ClientRequest|Action|Drop")
-	void Server_RequestDropSlotFromOtherInventoryAtIndex(int32 DestinationIndex, USlotInventoryComponent* SourceInventory, int32 SourceIndex, uint8 MaxAmount = 255);
+	void Server_RequestDropSlotFromOtherInventoryAtIndex(int32 DestinationIndex, USlotInventoryComponent* SourceInventory, int32 SourceIndex, int32 MaxAmount = 255);
 
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "ClientRequest|Action|Drop")
 	void Server_RequestDropSlotFromOtherInventory(USlotInventoryComponent* SourceInventory, int32 SourceIndex);
 
 	UFUNCTION(BlueprintCallable, Category = "ClientRequest|Action|Drop")
-	static void DropInventorySlotFromSourceToDestinationAtIndex(USlotInventoryComponent_Networked* SourceInventory, int32 SourceIndex, USlotInventoryComponent_Networked* DestinationInventory, int32 DestinationIndex, uint8 MaxAmount = 255);
+	static void DropInventorySlotFromSourceToDestinationAtIndex(USlotInventoryComponent_Networked* SourceInventory, int32 SourceIndex, USlotInventoryComponent_Networked* DestinationInventory, int32 DestinationIndex, int32 MaxAmount = 255);
 
 	UFUNCTION(BlueprintCallable, Category = "ClientRequest|Action|Drop")
 	static void DropInventorySlotFromSourceToDestination(USlotInventoryComponent_Networked* SourceInventory, int32 SourceIndex, USlotInventoryComponent_Networked* DestinationInventory);

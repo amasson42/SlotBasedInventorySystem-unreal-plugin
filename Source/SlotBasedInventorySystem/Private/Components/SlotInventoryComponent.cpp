@@ -139,7 +139,7 @@ void USlotInventoryComponent::ModifySlotCountAtIndex(int32 Index, int32 ModifyAm
 		return;
 	}
 
-	const uint8 MaxStackSize = GetMaxStackSizeForID(SlotPtr->ID);
+	const int32 MaxStackSize = GetMaxStackSizeForID(SlotPtr->ID);
 
 	if (bAllOrNothing)
 	{
@@ -160,16 +160,16 @@ void USlotInventoryComponent::ModifySlotCountAtIndex(int32 Index, int32 ModifyAm
 	}
 }
 
-uint8 USlotInventoryComponent::GetMaxStackSizeForID(const FName& ID) const
+int32 USlotInventoryComponent::GetMaxStackSizeForID(const FName& ID) const
 {
 	return 255;
 }
 
-void USlotInventoryComponent::GetMaxStackSizeForIds(const TSet<FName>& Ids, TMap<FName, uint8>& MaxStackSizes) const
+void USlotInventoryComponent::GetMaxStackSizeForIds(const TSet<FName>& Ids, TMap<FName, int32>& MaxStackSizes) const
 {
 	for (const FName& Id : Ids)
 	{
-		const uint8 MaxStackSize = GetMaxStackSizeForID(Id);
+		const int32 MaxStackSize = GetMaxStackSizeForID(Id);
 		MaxStackSizes.Add(Id, MaxStackSize);
 	}
 }
@@ -193,7 +193,7 @@ int32 USlotInventoryComponent::GetContentIdCount(FName Id) const
 
 bool USlotInventoryComponent::ModifyContentWithOverflow(const TMap<FName, int32>& IdsAndCounts, TMap<FName, int32>& Overflows)
 {
-	const TMap<FName, uint8>& MaxStackSizes = GetMaxStackSizesFromIds(IdsAndCounts);
+	const TMap<FName, int32>& MaxStackSizes = GetMaxStackSizesFromIds(IdsAndCounts);
 
 	TSet<int32> ModifiedSlots;
 	FInventoryContent::FContentModificationResult ModificationResult(&ModifiedSlots, &Overflows);
@@ -209,7 +209,7 @@ bool USlotInventoryComponent::ModifyContentWithOverflow(const TMap<FName, int32>
 
 bool USlotInventoryComponent::TryModifyContentWithoutOverflow(const TMap<FName, int32>& IdsAndCounts)
 {
-	const TMap<FName, uint8>& MaxStackSizes = GetMaxStackSizesFromIds(IdsAndCounts);
+	const TMap<FName, int32>& MaxStackSizes = GetMaxStackSizesFromIds(IdsAndCounts);
 
 	TSet<int32> ModifiedSlots;
 
@@ -231,7 +231,7 @@ bool USlotInventoryComponent::TryModifyContentWithoutOverflow(const TMap<FName, 
 	return true;
 }
 
-bool USlotInventoryComponent::DropSlotTowardOtherInventoryAtIndex(int32 SourceIndex, USlotInventoryComponent* DestinationInventory, int32 DestinationIndex, uint8 MaxAmount)
+bool USlotInventoryComponent::DropSlotTowardOtherInventoryAtIndex(int32 SourceIndex, USlotInventoryComponent* DestinationInventory, int32 DestinationIndex, int32 MaxAmount)
 {
 	if (!IsValid(DestinationInventory)) return false;
 
@@ -239,7 +239,7 @@ bool USlotInventoryComponent::DropSlotTowardOtherInventoryAtIndex(int32 SourceIn
 	if (!SourceSlot)
 		return false;
 
-	const uint8 MaxStackSize = DestinationInventory->GetMaxStackSizeForID(SourceSlot->ID);
+	const int32 MaxStackSize = DestinationInventory->GetMaxStackSizeForID(SourceSlot->ID);
 
 	if (DestinationInventory->Content.ReceiveSlotAtIndex(*SourceSlot, DestinationIndex, MaxStackSize, MaxAmount))
 	{
@@ -293,7 +293,7 @@ void USlotInventoryComponent::RegroupSlotAtIndexWithSimilarIds(int32 Index)
 	FInventorySlot* Slot = Content.GetSlotPtrAtIndex(Index);
 	if (!Slot) return;
 
-	const uint8 MaxStackSize = GetMaxStackSizeForID(Slot->ID);
+	const int32 MaxStackSize = GetMaxStackSizeForID(Slot->ID);
 
 	Content.RegroupSlotsWithSimilarIdsAtIndex(Index, ModificationResult, MaxStackSize, Slot);
 
@@ -304,11 +304,11 @@ void USlotInventoryComponent::RegroupSlotAtIndexWithSimilarIds(int32 Index)
 
 /** Private Content Management */
 
-const TMap<FName, uint8> USlotInventoryComponent::GetMaxStackSizesFromIds(const TMap<FName, int32>& IdsAndCounts) const
+const TMap<FName, int32> USlotInventoryComponent::GetMaxStackSizesFromIds(const TMap<FName, int32>& IdsAndCounts) const
 {
 	TSet<FName> Ids;
 	IdsAndCounts.GetKeys(Ids);
-	TMap<FName, uint8> MaxStackSizes;
+	TMap<FName, int32> MaxStackSizes;
 	GetMaxStackSizeForIds(Ids, MaxStackSizes);
 	return MaxStackSizes;
 }

@@ -16,6 +16,16 @@ bool USlotInventoryBlueprintLibrary::IsEmptySlot(const FInventorySlot& Slot)
     return Slot.IsEmpty();
 }
 
+bool USlotInventoryBlueprintLibrary::IsSlotAcceptingStackAddition(const FInventorySlot& Slot)
+{
+    for (const auto& Modifier : Slot.Modifiers)
+    {
+        if (!Modifier->AcceptStackAddition())
+            return false;
+    }
+    return true;
+}
+
 USlotInventoryComponent* USlotInventoryBlueprintLibrary::GetInventoryComponent(UObject* Holder, FName InventoryTag)
 {
     if (Holder->GetClass()->ImplementsInterface(UInventoryHolderInterface::StaticClass()))

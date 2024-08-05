@@ -59,7 +59,7 @@ void USlotInventoryComponent_Networked::Server_RequestClearSlotAtIndex_Implement
     ClearSlotAtIndex(Index);
 }
 
-void USlotInventoryComponent_Networked::Server_RequestDropSlotTowardOtherInventoryAtIndex_Implementation(int32 SourceIndex, USlotInventoryComponent* DestinationInventory, int32 DestinationIndex, uint8 MaxAmount)
+void USlotInventoryComponent_Networked::Server_RequestDropSlotTowardOtherInventoryAtIndex_Implementation(int32 SourceIndex, USlotInventoryComponent* DestinationInventory, int32 DestinationIndex, int32 MaxAmount)
 {
     DropSlotTowardOtherInventoryAtIndex(SourceIndex, DestinationInventory, DestinationIndex, MaxAmount);
 }
@@ -69,7 +69,7 @@ void USlotInventoryComponent_Networked::Server_RequestDropSlotTowardOtherInvento
     DropSlotTowardOtherInventory(SourceIndex, DestinationInventory);
 }
 
-void USlotInventoryComponent_Networked::Server_RequestDropSlotFromOtherInventoryAtIndex_Implementation(int32 DestinationIndex, USlotInventoryComponent* SourceInventory, int32 SourceIndex, uint8 MaxAmount)
+void USlotInventoryComponent_Networked::Server_RequestDropSlotFromOtherInventoryAtIndex_Implementation(int32 DestinationIndex, USlotInventoryComponent* SourceInventory, int32 SourceIndex, int32 MaxAmount)
 {
     if (IsValid(SourceInventory))
     {
@@ -111,7 +111,7 @@ static bool IsValidAndCanCallRPC(UActorComponent* Component)
     return false;
 }
 
-void USlotInventoryComponent_Networked::DropInventorySlotFromSourceToDestinationAtIndex(USlotInventoryComponent_Networked* SourceInventory, int32 SourceIndex, USlotInventoryComponent_Networked* DestinationInventory, int32 DestinationIndex, uint8 MaxAmount)
+void USlotInventoryComponent_Networked::DropInventorySlotFromSourceToDestinationAtIndex(USlotInventoryComponent_Networked* SourceInventory, int32 SourceIndex, USlotInventoryComponent_Networked* DestinationInventory, int32 DestinationIndex, int32 MaxAmount)
 {
     if (IsValidAndCanCallRPC(SourceInventory))
     {
