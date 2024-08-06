@@ -7,6 +7,8 @@
 #include "Structures/SlotInventorySystemStructs.h"
 #include "SlotInventoryComponent.generated.h"
 
+class USlotModifier;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryCapacityChangedSignature, USlotInventoryComponent*, SlotInventoryComponent, int32, NewCapacity);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryContentChangedSignature, USlotInventoryComponent*, SlotInventoryComponent, const TArray<int32>&, ChangedSlots);
 
@@ -64,6 +66,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Count")
 	void ModifySlotCountAtIndex(int32 Index, int32 ModifyAmount, bool bAllOrNothing, int32& Overflow);
 
+    UFUNCTION(BlueprintCallable, Category = "Content|Slot|Modifier", meta = (DeterminesOutputType = "ModifierClass"))
+    USlotModifier* AddModifierToSlotAtIndex(int32 Index, TSubclassOf<USlotModifier> ModifierClass);
+
 	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Count")
 	virtual int32 GetMaxStackSizeForID(const FName& ID) const;
 
@@ -74,7 +79,7 @@ public:
 	/** Content Management */
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Count")
-	int32 GetContentIdCount(FName Id) const;
+	int32 GetContentIdCount(const FName& Id) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Modify")
 	bool ModifyContentWithOverflow(const TMap<FName, int32>& IdsAndCounts, TMap<FName, int32>& Overflows);

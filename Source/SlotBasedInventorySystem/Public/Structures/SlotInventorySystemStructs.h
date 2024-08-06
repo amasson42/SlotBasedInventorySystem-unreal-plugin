@@ -6,6 +6,8 @@
 #include "Engine/DataTable.h"
 #include "SlotInventorySystemStructs.generated.h"
 
+class USlotModifier;
+
 
 USTRUCT(BlueprintType)
 struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot
@@ -20,7 +22,7 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot
 	int32 Count = 0;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Instanced)
-    TArray<TObjectPtr<class USlotModifier>> Modifiers;
+    TArray<TObjectPtr<USlotModifier>> Modifiers;
 
 
 	bool IsEmpty() const;
@@ -28,7 +30,10 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot
 	void ModifyCountWithOverflow(int32 ModifyAmount, int32& Overflow, int32 MaxStackSize = 255);
 	bool TryModifyCountByExact(int32 ModifyAmount, int32 MaxStackSize = 255);
 	bool AddIdAndCount(const FName& SlotId, int32 ModifyAmount, int32& Overflow, int32 MaxStackSize = 255);
+	bool AcceptStackAdditions() const;
 
+	USlotModifier* GetModifierByClass(TSubclassOf<USlotModifier> ModifierClass) const;
+	void GetModifiersByClass(TSubclassOf<USlotModifier> ModifierClass, TArray<USlotModifier*>& Modifiers) const;
 };
 
 
@@ -68,4 +73,5 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventoryContent
 
 	static void SwapSlots(FInventorySlot& FirstSlot, FInventorySlot& SecondSlot);
 
+	int32 GetFirstEmptySlotIndex() const;
 };

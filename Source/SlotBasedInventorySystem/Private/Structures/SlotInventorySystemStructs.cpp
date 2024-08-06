@@ -3,6 +3,7 @@
 
 #include "Structures/SlotInventorySystemStructs.h"
 #include "Math/UnrealMathUtility.h"
+#include "Structures/SlotModifier.h"
 #include "Templates/UnrealTemplate.h"
 
 
@@ -73,6 +74,35 @@ bool FInventorySlot::AddIdAndCount(const FName& SlotId, int32 ModifyAmount, int3
 
     ModifyCountWithOverflow(ModifyAmount, Overflow, MaxStackSize);
     return Overflow != ModifyAmount;
+}
+
+bool FInventorySlot::AcceptStackAdditions() const
+{
+    for (const USlotModifier* Modifier : Modifiers)
+    {
+        if (!Modifier->AcceptStackAddition())
+            return false;
+    }
+    return true;
+}
+
+USlotModifier* FInventorySlot::GetModifierByClass(TSubclassOf<USlotModifier> ModifierClass) const
+{
+	for (USlotModifier* Modifier : Modifiers)
+	{
+		if (Modifier->IsA(ModifierClass))
+			return Modifier;
+	}
+	return nullptr;
+}
+
+void FInventorySlot::GetModifiersByClass(TSubclassOf<USlotModifier> ModifierClass, TArray<USlotModifier*>& OutModifiers) const
+{
+	for (USlotModifier* Modifier : Modifiers)
+	{
+		if (Modifier->IsA(ModifierClass))
+			OutModifiers.Add(Modifier);
+	}
 }
 
 
@@ -152,6 +182,9 @@ void FInventoryContent::ReceiveSlotOverflow(const FName& SlotId, int32& InoutOve
         if (Slot.IsEmpty() != bTargetEmptySlots)
             continue;
 
+        if (!Slot.AcceptStackAdditions())
+            continue;
+
         if (Slot.AddIdAndCount(SlotId, InoutOverflow, InoutOverflow, MaxStackSize))
         {
             ModificationResult.bModifiedSomething = true;
@@ -178,7 +211,10 @@ bool FInventoryContent::ReceiveSlotAtIndex(FInventorySlot& InoutSlot, int32 Inde
         LocalSlot->Count = 0;
     }
 
-    if (LocalSlot->ID == InoutSlot.ID)
+    const bool bMergeable = LocalSlot->ID == InoutSlot.ID
+        && LocalSlot->AcceptStackAdditions()
+        && InoutSlot.Modifiers.IsEmpty();
+    if (bMergeable)
     {
         return MergeSlotsWithSimilarIds(*LocalSlot, InoutSlot, MaxStackSize, MaxTransferAmount);
     }
@@ -213,9 +249,12 @@ void FInventoryContent::RegroupSlotsWithSimilarIdsAtIndex(int32 Index, FContentM
             continue;
 
         FInventorySlot& Slot = Slots[SlotIndex];
-
+        
         if (!Slot.IsEmpty() && Slot.ID == TargetSlot->ID)
         {
+            if (!Slot.Modifiers.IsEmpty())
+                continue;
+
             bool bMerged = MergeSlotsWithSimilarIds(*TargetSlot, Slot, MaxStackSize);
             if (bMerged)
             {
@@ -249,6 +288,8 @@ bool FInventoryContent::MergeSlotsWithSimilarIds(FInventorySlot& DestinationSlot
         return false;
 
     SourceSlot.Count -= TransferAmount;
+    if (SourceSlot.Count == 0)
+		SourceSlot.Reset();
     DestinationSlot.Count += TransferAmount;
     return true;
 }
@@ -256,4 +297,14 @@ bool FInventoryContent::MergeSlotsWithSimilarIds(FInventorySlot& DestinationSlot
 void FInventoryContent::SwapSlots(FInventorySlot& FirstSlot, FInventorySlot& SecondSlot)
 {
     Swap(FirstSlot, SecondSlot);
+}
+
+int32 FInventoryContent::GetFirstEmptySlotIndex() const
+{
+    for (int32 i = 0; i < Slots.Num(); i++)
+	{
+		if (Slots[i].IsEmpty())
+			return i;
+	}
+	return -1;
 }

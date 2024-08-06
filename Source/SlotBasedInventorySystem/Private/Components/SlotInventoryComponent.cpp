@@ -2,9 +2,7 @@
 
 
 #include "Components/SlotInventoryComponent.h"
-#include "GameFramework/Pawn.h"
-#include "GameFramework/PlayerController.h"
-#include "GameFramework/PlayerState.h"
+#include "Structures/SlotModifier.h"
 
 USlotInventoryComponent::USlotInventoryComponent()
 {
@@ -133,7 +131,8 @@ void USlotInventoryComponent::ModifySlotCountAtIndex(int32 Index, int32 ModifyAm
 {
 	FInventorySlot* SlotPtr = Content.GetSlotPtrAtIndex(Index);
 
-	if (!SlotPtr || SlotPtr->IsEmpty())
+    const bool bCanStack = SlotPtr && !SlotPtr->IsEmpty() && SlotPtr->AcceptStackAdditions();
+	if (!bCanStack)
 	{
 		Overflow = ModifyAmount;
 		return;
@@ -160,6 +159,23 @@ void USlotInventoryComponent::ModifySlotCountAtIndex(int32 Index, int32 ModifyAm
 	}
 }
 
+USlotModifier* USlotInventoryComponent::AddModifierToSlotAtIndex(int32 Index, TSubclassOf<USlotModifier> ModifierClass)
+{
+    FInventorySlot* SlotPtr = Content.GetSlotPtrAtIndex(Index);
+    if (!SlotPtr)
+        return nullptr;
+
+    USlotModifier* NewModifier = NewObject<USlotModifier>(this, ModifierClass);
+    if (!NewModifier)
+        return nullptr;
+
+    SlotPtr->Modifiers.Add(NewModifier);
+
+    MarkDirtySlot(Index);
+
+    return NewModifier;
+}
+
 int32 USlotInventoryComponent::GetMaxStackSizeForID(const FName& ID) const
 {
 	return 255;
@@ -177,7 +193,7 @@ void USlotInventoryComponent::GetMaxStackSizeForIds(const TSet<FName>& Ids, TMap
 
 /** Content Management */
 
-int32 USlotInventoryComponent::GetContentIdCount(FName Id) const
+int32 USlotInventoryComponent::GetContentIdCount(const FName& Id) const
 {
 	int32 Total = 0;
 
@@ -233,7 +249,8 @@ bool USlotInventoryComponent::TryModifyContentWithoutOverflow(const TMap<FName, 
 
 bool USlotInventoryComponent::DropSlotTowardOtherInventoryAtIndex(int32 SourceIndex, USlotInventoryComponent* DestinationInventory, int32 DestinationIndex, int32 MaxAmount)
 {
-	if (!IsValid(DestinationInventory)) return false;
+	if (!IsValid(DestinationInventory))
+		return false;
 
 	FInventorySlot* SourceSlot = Content.GetSlotPtrAtIndex(SourceIndex);
 	if (!SourceSlot)
@@ -253,17 +270,27 @@ bool USlotInventoryComponent::DropSlotTowardOtherInventoryAtIndex(int32 SourceIn
 
 bool USlotInventoryComponent::DropSlotTowardOtherInventory(int32 SourceIndex, USlotInventoryComponent* Destination)
 {
-	if (!IsValid(Destination)) return false;
-
-	FInventorySlot SourceSlot;
-	if (!GetSlotValueAtIndex(SourceIndex, SourceSlot))
+	if (!IsValid(Destination))
 		return false;
 
-	if (SourceSlot.IsEmpty())
+	FInventorySlot* SourceSlotPtr = Content.GetSlotPtrAtIndex(SourceIndex);
+	if (SourceSlotPtr == nullptr)
 		return false;
+
+	if (SourceSlotPtr->IsEmpty())
+		return false;
+
+	if (!SourceSlotPtr->Modifiers.IsEmpty())
+	{
+		int32 FirstEmpty = Destination->Content.GetFirstEmptySlotIndex();
+		if (FirstEmpty < 0)
+			return false;
+		
+		return DropSlotTowardOtherInventoryAtIndex(SourceIndex, Destination, FirstEmpty, SourceSlotPtr->Count);
+	}
 
 	TMap<FName, int32> Modifications;
-	Modifications.Add(SourceSlot.ID, SourceSlot.Count);
+	Modifications.Add(SourceSlotPtr->ID, SourceSlotPtr->Count);
 
 	TMap<FName, int32> Overflows;
 	if (!Destination->ModifyContentWithOverflow(Modifications, Overflows))
@@ -275,14 +302,14 @@ bool USlotInventoryComponent::DropSlotTowardOtherInventory(int32 SourceIndex, US
 		return true;
 	}
 
-	checkf(Overflows.Contains(SourceSlot.ID), TEXT("Overflow is not empty but does not contains SourceSlot.ID"));
-	const int32 NewCount = Overflows[SourceSlot.ID];
+	checkf(Overflows.Contains(SourceSlotPtr->ID), TEXT("Overflow is not empty but does not contains SourceSlotPtr->ID"));
+	const int32 NewCount = Overflows[SourceSlotPtr->ID];
 
-	if (SourceSlot.Count == NewCount)
+	if (SourceSlotPtr->Count == NewCount)
 		return false;
 
-	SourceSlot.Count = NewCount;
-	return SetSlotValueAtIndex(SourceIndex, SourceSlot);
+	SourceSlotPtr->Count = NewCount;
+	return SetSlotValueAtIndex(SourceIndex, *SourceSlotPtr);
 }
 
 void USlotInventoryComponent::RegroupSlotAtIndexWithSimilarIds(int32 Index)
@@ -323,6 +350,22 @@ void USlotInventoryComponent::BroadcastContentUpdate()
 
 void USlotInventoryComponent::MarkDirtySlot(int32 SlotIndex)
 {
+	checkf(Content.IsValidIndex(SlotIndex), TEXT("MarkDirtySlot recieve invalid SlotIndex"));
+	
+	FInventorySlot* SlotPtr = Content.GetSlotPtrAtIndex(SlotIndex);
+	const int32 ModifiersNum = SlotPtr->Modifiers.Num();
+	for (int32 Index = SlotPtr->Modifiers.Num() - 1; Index >= 0; --Index)
+	{
+        if (!IsValid(SlotPtr->Modifiers[Index]))
+        {
+            SlotPtr->Modifiers.RemoveAt(Index);
+            continue;
+        }
+        USlotModifier* Modifier = SlotPtr->Modifiers[Index];
+		if (SlotPtr->Modifiers[Index]->GetOuter() != this)
+            Modifier->Rename(*Modifier->GetName(), this);
+	}
+
 	DirtySlots.Add(SlotIndex);
 	MarkSlotsHaveBeenModified();
 }

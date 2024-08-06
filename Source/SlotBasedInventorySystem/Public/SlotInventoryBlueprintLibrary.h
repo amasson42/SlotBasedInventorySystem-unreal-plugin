@@ -25,7 +25,7 @@ public:
 	static bool IsEmptySlot(const FInventorySlot& Slot);
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SlotInventory|Slot")
-    static bool IsSlotAcceptingStackAddition(const FInventorySlot& Slot);    
+    static bool IsSlotAcceptingStackAdditions(const FInventorySlot& Slot);    
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SlotInventory|Component")
 	static class USlotInventoryComponent* GetInventoryComponent(UObject* Holder, FName InventoryTag);

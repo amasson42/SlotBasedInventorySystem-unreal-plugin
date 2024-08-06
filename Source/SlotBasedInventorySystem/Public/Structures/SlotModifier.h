@@ -23,5 +23,5 @@ public:
 
     UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Slot Modifier")
     bool AcceptStackAddition() const;
-    bool AcceptStackAddition_Implementation() const;
+    virtual bool AcceptStackAddition_Implementation() const;
 };

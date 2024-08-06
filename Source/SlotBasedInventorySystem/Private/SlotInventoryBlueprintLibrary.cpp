@@ -4,6 +4,7 @@
 #include "SlotInventoryBlueprintLibrary.h"
 #include "Components/SlotInventoryComponent.h"
 #include "Interfaces/InventoryHolderInterface.h"
+#include "Structures/SlotModifier.h"
 
 
 bool USlotInventoryBlueprintLibrary::IsValidIndex(const FInventoryContent& Content, int32 Index)
@@ -16,14 +17,9 @@ bool USlotInventoryBlueprintLibrary::IsEmptySlot(const FInventorySlot& Slot)
     return Slot.IsEmpty();
 }
 
-bool USlotInventoryBlueprintLibrary::IsSlotAcceptingStackAddition(const FInventorySlot& Slot)
+bool USlotInventoryBlueprintLibrary::IsSlotAcceptingStackAdditions(const FInventorySlot& Slot)
 {
-    for (const auto& Modifier : Slot.Modifiers)
-    {
-        if (!Modifier->AcceptStackAddition())
-            return false;
-    }
-    return true;
+    return Slot.AcceptStackAdditions();
 }
 
 USlotInventoryComponent* USlotInventoryBlueprintLibrary::GetInventoryComponent(UObject* Holder, FName InventoryTag)
