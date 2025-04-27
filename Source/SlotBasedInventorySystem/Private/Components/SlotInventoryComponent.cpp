@@ -2,7 +2,6 @@
 
 
 #include "Components/SlotInventoryComponent.h"
-#include "Structures/SlotModifier.h"
 
 USlotInventoryComponent::USlotInventoryComponent()
 {
@@ -131,7 +130,7 @@ void USlotInventoryComponent::ModifySlotCountAtIndex(int32 Index, int32 ModifyAm
 {
 	FInventorySlot* SlotPtr = Content.GetSlotPtrAtIndex(Index);
 
-    const bool bCanStack = SlotPtr && !SlotPtr->IsEmpty() && SlotPtr->AcceptStackAdditions();
+    const bool bCanStack = SlotPtr && !SlotPtr->IsEmpty() && SlotPtr->Modifiers.IsEmpty();
 	if (!bCanStack)
 	{
 		Overflow = ModifyAmount;
@@ -159,21 +158,17 @@ void USlotInventoryComponent::ModifySlotCountAtIndex(int32 Index, int32 ModifyAm
 	}
 }
 
-USlotModifier* USlotInventoryComponent::AddModifierToSlotAtIndex(int32 Index, TSubclassOf<USlotModifier> ModifierClass)
+bool USlotInventoryComponent::AddModifierToSlotAtIndex(int32 Index, const FSlotModifier& NewModifier)
 {
     FInventorySlot* SlotPtr = Content.GetSlotPtrAtIndex(Index);
     if (!SlotPtr)
-        return nullptr;
-
-    USlotModifier* NewModifier = NewObject<USlotModifier>(this, ModifierClass);
-    if (!NewModifier)
-        return nullptr;
+        return false;
 
     SlotPtr->Modifiers.Add(NewModifier);
 
     MarkDirtySlot(Index);
 
-    return NewModifier;
+    return true;
 }
 
 int32 USlotInventoryComponent::GetMaxStackSizeForID(const FName& ID) const
@@ -351,21 +346,6 @@ void USlotInventoryComponent::BroadcastContentUpdate()
 void USlotInventoryComponent::MarkDirtySlot(int32 SlotIndex)
 {
 	checkf(Content.IsValidIndex(SlotIndex), TEXT("MarkDirtySlot recieve invalid SlotIndex"));
-	
-	FInventorySlot* SlotPtr = Content.GetSlotPtrAtIndex(SlotIndex);
-	const int32 ModifiersNum = SlotPtr->Modifiers.Num();
-	for (int32 Index = SlotPtr->Modifiers.Num() - 1; Index >= 0; --Index)
-	{
-        if (!IsValid(SlotPtr->Modifiers[Index]))
-        {
-            SlotPtr->Modifiers.RemoveAt(Index);
-            continue;
-        }
-        USlotModifier* Modifier = SlotPtr->Modifiers[Index];
-		if (SlotPtr->Modifiers[Index]->GetOuter() != this)
-            Modifier->Rename(*Modifier->GetName(), this);
-	}
-
 	DirtySlots.Add(SlotIndex);
 	MarkSlotsHaveBeenModified();
 }

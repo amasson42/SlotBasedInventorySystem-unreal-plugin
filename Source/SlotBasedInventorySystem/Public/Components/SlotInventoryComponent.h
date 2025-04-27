@@ -67,7 +67,7 @@ public:
 	void ModifySlotCountAtIndex(int32 Index, int32 ModifyAmount, bool bAllOrNothing, int32& Overflow);
 
     UFUNCTION(BlueprintCallable, Category = "Content|Slot|Modifier", meta = (DeterminesOutputType = "ModifierClass"))
-    USlotModifier* AddModifierToSlotAtIndex(int32 Index, TSubclassOf<USlotModifier> ModifierClass);
+    bool AddModifierToSlotAtIndex(int32 Index, const FSlotModifier& NewModifier);
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Count")
 	virtual int32 GetMaxStackSizeForID(const FName& ID) const;

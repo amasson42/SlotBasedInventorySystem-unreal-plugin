@@ -4,13 +4,24 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
+#include "InstancedStruct.h"
 #include "SlotInventorySystemStructs.generated.h"
-
-class USlotModifier;
 
 
 USTRUCT(BlueprintType)
-struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot
+struct FSlotModifier
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	FName Type;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	FInstancedStruct Data;
+};
+
+USTRUCT(BlueprintType)
+struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot // : public FFastArraySerializerItem
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -21,8 +32,8 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
 	int32 Count = 0;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Instanced)
-    TArray<TObjectPtr<USlotModifier>> Modifiers;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
+    TArray<FSlotModifier> Modifiers;
 
 
 	bool IsEmpty() const;
@@ -30,15 +41,16 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot
 	void ModifyCountWithOverflow(int32 ModifyAmount, int32& Overflow, int32 MaxStackSize = 255);
 	bool TryModifyCountByExact(int32 ModifyAmount, int32 MaxStackSize = 255);
 	bool AddIdAndCount(const FName& SlotId, int32 ModifyAmount, int32& Overflow, int32 MaxStackSize = 255);
-	bool AcceptStackAdditions() const;
 
-	USlotModifier* GetModifierByClass(TSubclassOf<USlotModifier> ModifierClass) const;
-	void GetModifiersByClass(TSubclassOf<USlotModifier> ModifierClass, TArray<USlotModifier*>& Modifiers) const;
+	const FSlotModifier* GetConstModifierByType(const FName& ModifierType) const;
+	FSlotModifier* GetModifierByType(const FName& ModifierType);
+	void GetConstModifiersByType(const FName& ModifierType, TArray<const FSlotModifier*>& Modifiers) const;
+	void GetModifiersByType(const FName& ModifierType, TArray<FSlotModifier*>& Modifiers);
 };
 
 
 USTRUCT(BlueprintType)
-struct SLOTBASEDINVENTORYSYSTEM_API FInventoryContent
+struct SLOTBASEDINVENTORYSYSTEM_API FInventoryContent // : public FFastArraySerializer
 {
     GENERATED_USTRUCT_BODY()
 
@@ -75,3 +87,9 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventoryContent
 
 	int32 GetFirstEmptySlotIndex() const;
 };
+
+// template<>
+// struct TStructOpsTypeTraits<FInventoryContent> : public TStructOpsTypeTraitsBase2<FInventoryContent>
+// {
+// 	enum { WithNetDeltaSerializer = true };
+// };

@@ -3,7 +3,6 @@
 
 #include "Structures/SlotInventorySystemStructs.h"
 #include "Math/UnrealMathUtility.h"
-#include "Structures/SlotModifier.h"
 #include "Templates/UnrealTemplate.h"
 
 
@@ -76,33 +75,42 @@ bool FInventorySlot::AddIdAndCount(const FName& SlotId, int32 ModifyAmount, int3
     return Overflow != ModifyAmount;
 }
 
-bool FInventorySlot::AcceptStackAdditions() const
+const FSlotModifier* FInventorySlot::GetConstModifierByType(const FName& ModifierType) const
 {
-    for (const USlotModifier* Modifier : Modifiers)
+    for (const FSlotModifier& Modifier : Modifiers)
     {
-        if (!Modifier->AcceptStackAddition())
-            return false;
+        if (Modifier.Type == ModifierType)
+            return &Modifier;
     }
-    return true;
+    return nullptr;
 }
 
-USlotModifier* FInventorySlot::GetModifierByClass(TSubclassOf<USlotModifier> ModifierClass) const
+FSlotModifier* FInventorySlot::GetModifierByType(const FName& ModifierType)
 {
-	for (USlotModifier* Modifier : Modifiers)
-	{
-		if (Modifier->IsA(ModifierClass))
-			return Modifier;
-	}
-	return nullptr;
+    for (FSlotModifier& Modifier : Modifiers)
+    {
+        if (Modifier.Type == ModifierType)
+            return &Modifier;
+    }
+    return nullptr;
 }
 
-void FInventorySlot::GetModifiersByClass(TSubclassOf<USlotModifier> ModifierClass, TArray<USlotModifier*>& OutModifiers) const
+void FInventorySlot::GetConstModifiersByType(const FName& ModifierType, TArray<const FSlotModifier*>& OutModifiers) const
 {
-	for (USlotModifier* Modifier : Modifiers)
-	{
-		if (Modifier->IsA(ModifierClass))
-			OutModifiers.Add(Modifier);
-	}
+    for (const FSlotModifier& Modifier : Modifiers)
+    {
+        if (Modifier.Type == ModifierType)
+            OutModifiers.Add(&Modifier);
+    }
+}
+
+void FInventorySlot::GetModifiersByType(const FName& ModifierType, TArray<FSlotModifier*>& OutModifiers)
+{
+    for (FSlotModifier& Modifier : Modifiers)
+    {
+        if (Modifier.Type == ModifierType)
+            OutModifiers.Add(&Modifier);
+    }
 }
 
 
@@ -182,7 +190,7 @@ void FInventoryContent::ReceiveSlotOverflow(const FName& SlotId, int32& InoutOve
         if (Slot.IsEmpty() != bTargetEmptySlots)
             continue;
 
-        if (!Slot.AcceptStackAdditions())
+        if (!Slot.Modifiers.IsEmpty())
             continue;
 
         if (Slot.AddIdAndCount(SlotId, InoutOverflow, InoutOverflow, MaxStackSize))
@@ -212,20 +220,16 @@ bool FInventoryContent::ReceiveSlotAtIndex(FInventorySlot& InoutSlot, int32 Inde
     }
 
     const bool bMergeable = LocalSlot->ID == InoutSlot.ID
-        && LocalSlot->AcceptStackAdditions()
+        && LocalSlot->Modifiers.IsEmpty()
         && InoutSlot.Modifiers.IsEmpty();
     if (bMergeable)
-    {
         return MergeSlotsWithSimilarIds(*LocalSlot, InoutSlot, MaxStackSize, MaxTransferAmount);
-    }
-    else
-    {
-        bool bCanReceiveSlot = InoutSlot.Count <= MaxTransferAmount && InoutSlot.Count <= MaxStackSize;
-        if (!bCanReceiveSlot)
-            return false;
 
-        SwapSlots(InoutSlot, *LocalSlot);
-    }
+    bool bCanReceiveSlot = InoutSlot.Count <= MaxTransferAmount && InoutSlot.Count <= MaxStackSize;
+    if (!bCanReceiveSlot)
+        return false;
+
+    SwapSlots(InoutSlot, *LocalSlot);
 
     return true;
 }

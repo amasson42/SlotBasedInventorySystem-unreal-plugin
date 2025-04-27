@@ -26,6 +26,7 @@ public class SlotBasedInventorySystem : ModuleRules
 			new string[]
 			{
 				"Core",
+				"StructUtils",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
