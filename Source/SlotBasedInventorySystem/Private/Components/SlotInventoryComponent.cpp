@@ -1,17 +1,17 @@
 // Amasson
 
 
-#include "Components/SlotInventoryComponent_Networked.h"
+#include "Components/SlotInventoryComponent.h"
 #include "Net/UnrealNetwork.h"
 
 
-USlotInventoryComponent_Networked::USlotInventoryComponent_Networked()
+USlotInventoryComponent::USlotInventoryComponent()
 {
     SetIsReplicatedByDefault(true);
     bHasAuthority = GetOwner() ? GetOwner()->HasAuthority() : false;
 }
 
-void USlotInventoryComponent_Networked::BeginPlay()
+void USlotInventoryComponent::BeginPlay()
 {
     Super::BeginPlay();
 
@@ -21,14 +21,14 @@ void USlotInventoryComponent_Networked::BeginPlay()
     }
 }
 
-void USlotInventoryComponent_Networked::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void USlotInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 
 }
 
-void USlotInventoryComponent_Networked::Server_BroadcastFullInventory_Implementation(bool bOwnerOnly)
+void USlotInventoryComponent::Server_BroadcastFullInventory_Implementation(bool bOwnerOnly)
 {
     TArray<int32> AllIndices;
     AllIndices.Reserve(GetContentCapacity() + 1);  // Reserve space for N+1 elements
@@ -44,32 +44,32 @@ void USlotInventoryComponent_Networked::Server_BroadcastFullInventory_Implementa
 
 /** Client Request */
 
-void USlotInventoryComponent_Networked::Server_RequestSetContentCapacity_Implementation(int32 NewCapacity)
+void USlotInventoryComponent::Server_RequestSetContentCapacity_Implementation(int32 NewCapacity)
 {
     SetContentCapacity(NewCapacity);
 }
 
-void USlotInventoryComponent_Networked::Server_RequestSetSlotValueAtIndex_Implementation(int32 Index, const FInventorySlot& NewSlotValue)
+void USlotInventoryComponent::Server_RequestSetSlotValueAtIndex_Implementation(int32 Index, const FInventorySlot& NewSlotValue)
 {
     SetSlotValueAtIndex(Index, NewSlotValue);
 }
 
-void USlotInventoryComponent_Networked::Server_RequestClearSlotAtIndex_Implementation(int32 Index)
+void USlotInventoryComponent::Server_RequestClearSlotAtIndex_Implementation(int32 Index)
 {
     ClearSlotAtIndex(Index);
 }
 
-void USlotInventoryComponent_Networked::Server_RequestDropSlotTowardOtherInventoryAtIndex_Implementation(int32 SourceIndex, USlotInventoryComponentBase* DestinationInventory, int32 DestinationIndex, int32 MaxAmount)
+void USlotInventoryComponent::Server_RequestDropSlotTowardOtherInventoryAtIndex_Implementation(int32 SourceIndex, USlotInventoryComponentBase* DestinationInventory, int32 DestinationIndex, int32 MaxAmount)
 {
     DropSlotTowardOtherInventoryAtIndex(SourceIndex, DestinationInventory, DestinationIndex, MaxAmount);
 }
 
-void USlotInventoryComponent_Networked::Server_RequestDropSlotTowardOtherInventory_Implementation(int32 SourceIndex, USlotInventoryComponentBase* DestinationInventory)
+void USlotInventoryComponent::Server_RequestDropSlotTowardOtherInventory_Implementation(int32 SourceIndex, USlotInventoryComponentBase* DestinationInventory)
 {
     DropSlotTowardOtherInventory(SourceIndex, DestinationInventory);
 }
 
-void USlotInventoryComponent_Networked::Server_RequestDropSlotFromOtherInventoryAtIndex_Implementation(int32 DestinationIndex, USlotInventoryComponentBase* SourceInventory, int32 SourceIndex, int32 MaxAmount)
+void USlotInventoryComponent::Server_RequestDropSlotFromOtherInventoryAtIndex_Implementation(int32 DestinationIndex, USlotInventoryComponentBase* SourceInventory, int32 SourceIndex, int32 MaxAmount)
 {
     if (IsValid(SourceInventory))
     {
@@ -77,7 +77,7 @@ void USlotInventoryComponent_Networked::Server_RequestDropSlotFromOtherInventory
     }
 }
 
-void USlotInventoryComponent_Networked::Server_RequestDropSlotFromOtherInventory_Implementation(USlotInventoryComponentBase* SourceInventory, int32 SourceIndex)
+void USlotInventoryComponent::Server_RequestDropSlotFromOtherInventory_Implementation(USlotInventoryComponentBase* SourceInventory, int32 SourceIndex)
 {
     if (IsValid(SourceInventory))
     {
@@ -111,7 +111,7 @@ static bool IsValidAndCanCallRPC(UActorComponent* Component)
     return false;
 }
 
-void USlotInventoryComponent_Networked::DropInventorySlotFromSourceToDestinationAtIndex(USlotInventoryComponent_Networked* SourceInventory, int32 SourceIndex, USlotInventoryComponent_Networked* DestinationInventory, int32 DestinationIndex, int32 MaxAmount)
+void USlotInventoryComponent::DropInventorySlotFromSourceToDestinationAtIndex(USlotInventoryComponent* SourceInventory, int32 SourceIndex, USlotInventoryComponent* DestinationInventory, int32 DestinationIndex, int32 MaxAmount)
 {
     if (IsValidAndCanCallRPC(SourceInventory))
     {
@@ -123,7 +123,7 @@ void USlotInventoryComponent_Networked::DropInventorySlotFromSourceToDestination
     }
 }
 
-void USlotInventoryComponent_Networked::DropInventorySlotFromSourceToDestination(USlotInventoryComponent_Networked* SourceInventory, int32 SourceIndex, USlotInventoryComponent_Networked* DestinationInventory)
+void USlotInventoryComponent::DropInventorySlotFromSourceToDestination(USlotInventoryComponent* SourceInventory, int32 SourceIndex, USlotInventoryComponent* DestinationInventory)
 {
     if (IsValidAndCanCallRPC(SourceInventory))
     {
@@ -135,7 +135,7 @@ void USlotInventoryComponent_Networked::DropInventorySlotFromSourceToDestination
     }
 }
 
-void USlotInventoryComponent_Networked::Server_RequestRegroupSlotAtIndexWithSimilarIds_Implementation(int32 Index)
+void USlotInventoryComponent::Server_RequestRegroupSlotAtIndexWithSimilarIds_Implementation(int32 Index)
 {
     RegroupSlotAtIndexWithSimilarIds(Index);
 }
@@ -143,17 +143,17 @@ void USlotInventoryComponent_Networked::Server_RequestRegroupSlotAtIndexWithSimi
 
 /** Slot Update */
 
-void USlotInventoryComponent_Networked::NetMulticast_UpdateSlotsValues_Implementation(const TArray<int32>& Indices, const TArray<FInventorySlot>& Values)
+void USlotInventoryComponent::NetMulticast_UpdateSlotsValues_Implementation(const TArray<int32>& Indices, const TArray<FInventorySlot>& Values)
 {
     ReceievedUpdateSlotsValues(Indices, Values);
 }
 
-void USlotInventoryComponent_Networked::Client_UpdateSlotsValues_Implementation(const TArray<int32>& Indices, const TArray<FInventorySlot>& Values)
+void USlotInventoryComponent::Client_UpdateSlotsValues_Implementation(const TArray<int32>& Indices, const TArray<FInventorySlot>& Values)
 {
     ReceievedUpdateSlotsValues(Indices, Values);
 }
 
-void USlotInventoryComponent_Networked::ReceievedUpdateSlotsValues(const TArray<int32>& Indices, const TArray<FInventorySlot>& Values)
+void USlotInventoryComponent::ReceievedUpdateSlotsValues(const TArray<int32>& Indices, const TArray<FInventorySlot>& Values)
 {
     checkf(Indices.Num() == Values.Num(), TEXT("SlotInventoryComponent_Networked::ReceievedUpdateSlotsValues: Received miss matching arrays"));
 
@@ -169,7 +169,7 @@ void USlotInventoryComponent_Networked::ReceievedUpdateSlotsValues(const TArray<
 
 /** Capacity Update */
 
-void USlotInventoryComponent_Networked::OnCapacityChanged(USlotInventoryComponentBase* SlotInventoryComponent, int32 NewCapacity)
+void USlotInventoryComponent::OnCapacityChanged(USlotInventoryComponentBase* SlotInventoryComponent, int32 NewCapacity)
 {
     if (SlotInventoryComponent == this)
     {
@@ -177,7 +177,7 @@ void USlotInventoryComponent_Networked::OnCapacityChanged(USlotInventoryComponen
     }
 }
 
-void USlotInventoryComponent_Networked::NetMulticast_UpdateCapacity_Implementation(int32 NewCapacity)
+void USlotInventoryComponent::NetMulticast_UpdateCapacity_Implementation(int32 NewCapacity)
 {
     if (bHasAuthority)
         return;
@@ -188,7 +188,7 @@ void USlotInventoryComponent_Networked::NetMulticast_UpdateCapacity_Implementati
 
 /** Content Update */
 
-void USlotInventoryComponent_Networked::BroadcastContentUpdate()
+void USlotInventoryComponent::BroadcastContentUpdate()
 {
     if (bHasAuthority)
         BroadcastModifiedSlotsToClients();
@@ -196,7 +196,7 @@ void USlotInventoryComponent_Networked::BroadcastContentUpdate()
     Super::BroadcastContentUpdate();
 }
 
-void USlotInventoryComponent_Networked::BroadcastModifiedSlotsToClients()
+void USlotInventoryComponent::BroadcastModifiedSlotsToClients()
 {
     TArray<int32> Indices;
     TArray<FInventorySlot> Values;

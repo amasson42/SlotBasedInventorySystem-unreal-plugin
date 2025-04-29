@@ -4,19 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Components/SlotInventoryComponentBase.h"
-#include "SlotInventoryComponent_Networked.generated.h"
+#include "SlotInventoryComponent.generated.h"
 
 /**
  * 
  */
 UCLASS( Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SLOTBASEDINVENTORYSYSTEM_API USlotInventoryComponent_Networked : public USlotInventoryComponentBase
+class SLOTBASEDINVENTORYSYSTEM_API USlotInventoryComponent : public USlotInventoryComponentBase
 {
 	GENERATED_BODY()
 
 public:
 
-	USlotInventoryComponent_Networked();
+	USlotInventoryComponent();
 
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -50,10 +50,10 @@ public:
 	void Server_RequestDropSlotFromOtherInventory(USlotInventoryComponentBase* SourceInventory, int32 SourceIndex);
 
 	UFUNCTION(BlueprintCallable, Category = "ClientRequest|Action|Drop")
-	static void DropInventorySlotFromSourceToDestinationAtIndex(USlotInventoryComponent_Networked* SourceInventory, int32 SourceIndex, USlotInventoryComponent_Networked* DestinationInventory, int32 DestinationIndex, int32 MaxAmount = 255);
+	static void DropInventorySlotFromSourceToDestinationAtIndex(USlotInventoryComponent* SourceInventory, int32 SourceIndex, USlotInventoryComponent* DestinationInventory, int32 DestinationIndex, int32 MaxAmount = 255);
 
 	UFUNCTION(BlueprintCallable, Category = "ClientRequest|Action|Drop")
-	static void DropInventorySlotFromSourceToDestination(USlotInventoryComponent_Networked* SourceInventory, int32 SourceIndex, USlotInventoryComponent_Networked* DestinationInventory);
+	static void DropInventorySlotFromSourceToDestination(USlotInventoryComponent* SourceInventory, int32 SourceIndex, USlotInventoryComponent* DestinationInventory);
 
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "ClientRequest|Action")
 	void Server_RequestRegroupSlotAtIndexWithSimilarIds(int32 Index);
@@ -77,7 +77,7 @@ protected:
 
 	UFUNCTION()
 	void OnCapacityChanged(USlotInventoryComponentBase* SlotInventoryComponent, int32 NewCapacity);
-	
+
 	UFUNCTION(NetMulticast, Reliable)
 	void NetMulticast_UpdateCapacity(int32 NewCapacity);
 
