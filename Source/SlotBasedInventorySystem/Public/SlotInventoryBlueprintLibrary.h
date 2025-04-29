@@ -27,4 +27,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SlotInventory|Component")
 	static class USlotInventoryComponent* GetInventoryComponent(UObject* Holder, FName InventoryTag);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SlotInventory|Debug")
+	static void ModifierToString(const FSlotModifier& Modifier, FString& OutString);
+
 };

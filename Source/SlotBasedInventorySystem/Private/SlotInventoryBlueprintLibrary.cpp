@@ -2,6 +2,8 @@
 
 
 #include "SlotInventoryBlueprintLibrary.h"
+
+#include "JsonObjectConverter.h"
 #include "Components/SlotInventoryComponent.h"
 #include "Interfaces/InventoryHolderInterface.h"
 
@@ -25,4 +27,26 @@ USlotInventoryComponent* USlotInventoryBlueprintLibrary::GetInventoryComponent(U
         return Actor->FindComponentByClass<USlotInventoryComponent>();
 
     return nullptr;
+}
+
+void USlotInventoryBlueprintLibrary::ModifierToString(const FSlotModifier& Modifier, FString& OutString)
+{
+    OutString = "";
+    OutString += Modifier.Type.ToString();
+
+    if (Modifier.Data.IsValid())
+    {
+        const UScriptStruct* ScriptStruct = Modifier.Data.GetScriptStruct();
+        const void* StructData = Modifier.Data.GetMemory();
+
+        OutString += " (" + ScriptStruct->GetName() + ")";
+
+        if (!ScriptStruct || !StructData)
+            return;
+
+        FString JsonString;
+        auto JsonWriter = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&JsonString);
+        if (FJsonObjectConverter::UStructToJsonObjectString(ScriptStruct, StructData, JsonString, 0, 0))
+            OutString += JsonString;
+    }
 }
