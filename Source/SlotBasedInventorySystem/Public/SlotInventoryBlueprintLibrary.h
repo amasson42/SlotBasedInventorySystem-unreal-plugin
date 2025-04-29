@@ -25,7 +25,7 @@ public:
 	static bool IsEmptySlot(const FInventorySlot& Slot);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SlotInventory|Component")
-	static class USlotInventoryComponent* GetInventoryComponent(UObject* Holder, FName InventoryTag);
+	static class USlotInventoryComponentBase* GetInventoryComponent(UObject* Holder, FName InventoryTag);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SlotInventory|Debug")
 	static void ModifierToString(const FSlotModifier& Modifier, FString& OutString);

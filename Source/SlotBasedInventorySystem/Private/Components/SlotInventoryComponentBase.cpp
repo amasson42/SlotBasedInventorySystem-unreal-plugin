@@ -1,9 +1,9 @@
 // Amasson
 
 
-#include "Components/SlotInventoryComponent.h"
+#include "Components/SlotInventoryComponentBase.h"
 
-USlotInventoryComponent::USlotInventoryComponent()
+USlotInventoryComponentBase::USlotInventoryComponentBase()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
@@ -13,12 +13,12 @@ USlotInventoryComponent::USlotInventoryComponent()
 
 /** Public Content Management */
 
-const FInventoryContent& USlotInventoryComponent::GetContent() const
+const FInventoryContent& USlotInventoryComponentBase::GetContent() const
 {
 	return Content;
 }
 
-void USlotInventoryComponent::SetContent(const FInventoryContent& NewContent)
+void USlotInventoryComponentBase::SetContent(const FInventoryContent& NewContent)
 {
 	if (NewContent.Slots.Num() != GetContentCapacity())
 	{
@@ -30,12 +30,12 @@ void USlotInventoryComponent::SetContent(const FInventoryContent& NewContent)
 	}
 }
 
-int32 USlotInventoryComponent::GetContentCapacity() const
+int32 USlotInventoryComponentBase::GetContentCapacity() const
 {
 	return Content.Slots.Num();
 }
 
-void USlotInventoryComponent::SetContentCapacity(int32 NewCapacity)
+void USlotInventoryComponentBase::SetContentCapacity(int32 NewCapacity)
 {
 	if (NewCapacity < 0)
 		NewCapacity = 0;
@@ -57,7 +57,7 @@ void USlotInventoryComponent::SetContentCapacity(int32 NewCapacity)
 
 /** Public Slot Management */
 
-bool USlotInventoryComponent::GetSlotValueAtIndex(int32 Index, FInventorySlot& SlotValue) const
+bool USlotInventoryComponentBase::GetSlotValueAtIndex(int32 Index, FInventorySlot& SlotValue) const
 {
 	if (const FInventorySlot* SlotPtr = Content.GetSlotConstPtrAtIndex(Index))
 	{
@@ -68,7 +68,7 @@ bool USlotInventoryComponent::GetSlotValueAtIndex(int32 Index, FInventorySlot& S
 	return false;
 }
 
-bool USlotInventoryComponent::SetSlotValueAtIndex(int32 Index, const FInventorySlot& NewSlotValue)
+bool USlotInventoryComponentBase::SetSlotValueAtIndex(int32 Index, const FInventorySlot& NewSlotValue)
 {
 	if (FInventorySlot* SlotPtr = Content.GetSlotPtrAtIndex(Index))
 	{
@@ -80,7 +80,7 @@ bool USlotInventoryComponent::SetSlotValueAtIndex(int32 Index, const FInventoryS
 	return false;
 }
 
-bool USlotInventoryComponent::IsEmptySlotAtIndex(int32 Index) const
+bool USlotInventoryComponentBase::IsEmptySlotAtIndex(int32 Index) const
 {
 	if (const FInventorySlot* SlotPtr = Content.GetSlotConstPtrAtIndex(Index))
 		return SlotPtr->IsEmpty();
@@ -88,7 +88,7 @@ bool USlotInventoryComponent::IsEmptySlotAtIndex(int32 Index) const
 	return false;
 }
 
-bool USlotInventoryComponent::ClearSlotAtIndex(int32 Index)
+bool USlotInventoryComponentBase::ClearSlotAtIndex(int32 Index)
 {
 	if (FInventorySlot* SlotPtr = Content.GetSlotPtrAtIndex(Index))
 	{
@@ -104,7 +104,7 @@ bool USlotInventoryComponent::ClearSlotAtIndex(int32 Index)
 	return false;
 }
 
-int32 USlotInventoryComponent::GetEmptySlotCounts() const
+int32 USlotInventoryComponentBase::GetEmptySlotCounts() const
 {
 	int32 Total = 0;
 
@@ -116,7 +116,7 @@ int32 USlotInventoryComponent::GetEmptySlotCounts() const
 	return Total;
 }
 
-bool USlotInventoryComponent::ContainsOnlyEmptySlots() const
+bool USlotInventoryComponentBase::ContainsOnlyEmptySlots() const
 {
 	for (const FInventorySlot& Slot : Content.Slots)
 	{
@@ -126,7 +126,7 @@ bool USlotInventoryComponent::ContainsOnlyEmptySlots() const
 	return true;
 }
 
-void USlotInventoryComponent::ModifySlotCountAtIndex(int32 Index, int32 ModifyAmount, bool bAllOrNothing, int32& Overflow)
+void USlotInventoryComponentBase::ModifySlotCountAtIndex(int32 Index, int32 ModifyAmount, bool bAllOrNothing, int32& Overflow)
 {
 	FInventorySlot* SlotPtr = Content.GetSlotPtrAtIndex(Index);
 
@@ -158,7 +158,7 @@ void USlotInventoryComponent::ModifySlotCountAtIndex(int32 Index, int32 ModifyAm
 	}
 }
 
-bool USlotInventoryComponent::AddModifierToSlotAtIndex(int32 Index, const FSlotModifier& NewModifier)
+bool USlotInventoryComponentBase::AddModifierToSlotAtIndex(int32 Index, const FSlotModifier& NewModifier)
 {
     FInventorySlot* SlotPtr = Content.GetSlotPtrAtIndex(Index);
     if (!SlotPtr)
@@ -171,12 +171,12 @@ bool USlotInventoryComponent::AddModifierToSlotAtIndex(int32 Index, const FSlotM
     return true;
 }
 
-int32 USlotInventoryComponent::GetMaxStackSizeForID(const FName& ID) const
+int32 USlotInventoryComponentBase::GetMaxStackSizeForID(const FName& ID) const
 {
 	return 255;
 }
 
-void USlotInventoryComponent::GetMaxStackSizeForIds(const TSet<FName>& Ids, TMap<FName, int32>& MaxStackSizes) const
+void USlotInventoryComponentBase::GetMaxStackSizeForIds(const TSet<FName>& Ids, TMap<FName, int32>& MaxStackSizes) const
 {
 	for (const FName& Id : Ids)
 	{
@@ -188,7 +188,7 @@ void USlotInventoryComponent::GetMaxStackSizeForIds(const TSet<FName>& Ids, TMap
 
 /** Content Management */
 
-int32 USlotInventoryComponent::GetContentIdCount(const FName& Id) const
+int32 USlotInventoryComponentBase::GetContentIdCount(const FName& Id) const
 {
 	int32 Total = 0;
 
@@ -202,7 +202,7 @@ int32 USlotInventoryComponent::GetContentIdCount(const FName& Id) const
 	return Total;
 }
 
-bool USlotInventoryComponent::ModifyContentWithOverflow(const TMap<FName, int32>& IdsAndCounts, TMap<FName, int32>& Overflows)
+bool USlotInventoryComponentBase::ModifyContentWithOverflow(const TMap<FName, int32>& IdsAndCounts, TMap<FName, int32>& Overflows)
 {
 	const TMap<FName, int32>& MaxStackSizes = GetMaxStackSizesFromIds(IdsAndCounts);
 
@@ -218,7 +218,7 @@ bool USlotInventoryComponent::ModifyContentWithOverflow(const TMap<FName, int32>
 	return true;
 }
 
-bool USlotInventoryComponent::TryModifyContentWithoutOverflow(const TMap<FName, int32>& IdsAndCounts)
+bool USlotInventoryComponentBase::TryModifyContentWithoutOverflow(const TMap<FName, int32>& IdsAndCounts)
 {
 	const TMap<FName, int32>& MaxStackSizes = GetMaxStackSizesFromIds(IdsAndCounts);
 
@@ -242,7 +242,7 @@ bool USlotInventoryComponent::TryModifyContentWithoutOverflow(const TMap<FName, 
 	return true;
 }
 
-bool USlotInventoryComponent::DropSlotTowardOtherInventoryAtIndex(int32 SourceIndex, USlotInventoryComponent* DestinationInventory, int32 DestinationIndex, int32 MaxAmount)
+bool USlotInventoryComponentBase::DropSlotTowardOtherInventoryAtIndex(int32 SourceIndex, USlotInventoryComponentBase* DestinationInventory, int32 DestinationIndex, int32 MaxAmount)
 {
 	if (!IsValid(DestinationInventory))
 		return false;
@@ -263,7 +263,7 @@ bool USlotInventoryComponent::DropSlotTowardOtherInventoryAtIndex(int32 SourceIn
 	return false;
 }
 
-bool USlotInventoryComponent::DropSlotTowardOtherInventory(int32 SourceIndex, USlotInventoryComponent* Destination)
+bool USlotInventoryComponentBase::DropSlotTowardOtherInventory(int32 SourceIndex, USlotInventoryComponentBase* Destination)
 {
 	if (!IsValid(Destination))
 		return false;
@@ -307,7 +307,7 @@ bool USlotInventoryComponent::DropSlotTowardOtherInventory(int32 SourceIndex, US
 	return SetSlotValueAtIndex(SourceIndex, *SourceSlotPtr);
 }
 
-void USlotInventoryComponent::RegroupSlotAtIndexWithSimilarIds(int32 Index)
+void USlotInventoryComponentBase::RegroupSlotAtIndexWithSimilarIds(int32 Index)
 {
 	TSet<int32> ModifiedSlots;
 	FInventoryContent::FContentModificationResult ModificationResult(&ModifiedSlots, nullptr);
@@ -326,7 +326,7 @@ void USlotInventoryComponent::RegroupSlotAtIndexWithSimilarIds(int32 Index)
 
 /** Private Content Management */
 
-const TMap<FName, int32> USlotInventoryComponent::GetMaxStackSizesFromIds(const TMap<FName, int32>& IdsAndCounts) const
+const TMap<FName, int32> USlotInventoryComponentBase::GetMaxStackSizesFromIds(const TMap<FName, int32>& IdsAndCounts) const
 {
 	TSet<FName> Ids;
 	IdsAndCounts.GetKeys(Ids);
@@ -337,20 +337,20 @@ const TMap<FName, int32> USlotInventoryComponent::GetMaxStackSizesFromIds(const 
 
 /** Slot Updating */
 
-void USlotInventoryComponent::BroadcastContentUpdate()
+void USlotInventoryComponentBase::BroadcastContentUpdate()
 {
 	OnInventoryContentChanged.Broadcast(this, DirtySlots.Array());
 	DirtySlots.Reset();
 }
 
-void USlotInventoryComponent::MarkDirtySlot(int32 SlotIndex)
+void USlotInventoryComponentBase::MarkDirtySlot(int32 SlotIndex)
 {
 	checkf(Content.IsValidIndex(SlotIndex), TEXT("MarkDirtySlot recieve invalid SlotIndex"));
 	DirtySlots.Add(SlotIndex);
 	MarkSlotsHaveBeenModified();
 }
 
-void USlotInventoryComponent::MarkSlotsHaveBeenModified()
+void USlotInventoryComponentBase::MarkSlotsHaveBeenModified()
 {
 	SetComponentTickEnabled(true);
 }

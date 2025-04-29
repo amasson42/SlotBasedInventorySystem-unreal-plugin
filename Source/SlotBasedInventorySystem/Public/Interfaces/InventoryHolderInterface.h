@@ -25,6 +25,6 @@ class SLOTBASEDINVENTORYSYSTEM_API IInventoryHolderInterface
 public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "InventoryHolderInterface")
-	class USlotInventoryComponent* GetInventoryComponent(FName InventoryTag);
+	class USlotInventoryComponentBase* GetInventoryComponent(FName InventoryTag);
 
 };

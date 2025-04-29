@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/SlotInventoryComponent.h"
+#include "Components/SlotInventoryComponentBase.h"
 #include "SlotInventoryComponent_Networked.generated.h"
 
 /**
  * 
  */
 UCLASS( Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SLOTBASEDINVENTORYSYSTEM_API USlotInventoryComponent_Networked : public USlotInventoryComponent
+class SLOTBASEDINVENTORYSYSTEM_API USlotInventoryComponent_Networked : public USlotInventoryComponentBase
 {
 	GENERATED_BODY()
 
@@ -38,16 +38,16 @@ public:
 	void Server_RequestClearSlotAtIndex(int32 Index);
 
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "ClientRequest|Action|Drop")
-	void Server_RequestDropSlotTowardOtherInventoryAtIndex(int32 SourceIndex, USlotInventoryComponent* DestinationInventory, int32 DestinationIndex, int32 MaxAmount = 255);
+	void Server_RequestDropSlotTowardOtherInventoryAtIndex(int32 SourceIndex, USlotInventoryComponentBase* DestinationInventory, int32 DestinationIndex, int32 MaxAmount = 255);
 
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "ClientRequest|Action|Drop")
-	void Server_RequestDropSlotTowardOtherInventory(int32 SourceIndex, USlotInventoryComponent* DestinationInventory);
+	void Server_RequestDropSlotTowardOtherInventory(int32 SourceIndex, USlotInventoryComponentBase* DestinationInventory);
 
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "ClientRequest|Action|Drop")
-	void Server_RequestDropSlotFromOtherInventoryAtIndex(int32 DestinationIndex, USlotInventoryComponent* SourceInventory, int32 SourceIndex, int32 MaxAmount = 255);
+	void Server_RequestDropSlotFromOtherInventoryAtIndex(int32 DestinationIndex, USlotInventoryComponentBase* SourceInventory, int32 SourceIndex, int32 MaxAmount = 255);
 
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "ClientRequest|Action|Drop")
-	void Server_RequestDropSlotFromOtherInventory(USlotInventoryComponent* SourceInventory, int32 SourceIndex);
+	void Server_RequestDropSlotFromOtherInventory(USlotInventoryComponentBase* SourceInventory, int32 SourceIndex);
 
 	UFUNCTION(BlueprintCallable, Category = "ClientRequest|Action|Drop")
 	static void DropInventorySlotFromSourceToDestinationAtIndex(USlotInventoryComponent_Networked* SourceInventory, int32 SourceIndex, USlotInventoryComponent_Networked* DestinationInventory, int32 DestinationIndex, int32 MaxAmount = 255);
@@ -76,7 +76,7 @@ protected:
 	/** Capacity Update */
 
 	UFUNCTION()
-	void OnCapacityChanged(USlotInventoryComponent* SlotInventoryComponent, int32 NewCapacity);
+	void OnCapacityChanged(USlotInventoryComponentBase* SlotInventoryComponent, int32 NewCapacity);
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void NetMulticast_UpdateCapacity(int32 NewCapacity);

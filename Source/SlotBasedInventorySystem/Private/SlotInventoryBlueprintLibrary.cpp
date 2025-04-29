@@ -4,7 +4,7 @@
 #include "SlotInventoryBlueprintLibrary.h"
 
 #include "JsonObjectConverter.h"
-#include "Components/SlotInventoryComponent.h"
+#include "Components/SlotInventoryComponentBase.h"
 #include "Interfaces/InventoryHolderInterface.h"
 
 
@@ -18,13 +18,13 @@ bool USlotInventoryBlueprintLibrary::IsEmptySlot(const FInventorySlot& Slot)
     return Slot.IsEmpty();
 }
 
-USlotInventoryComponent* USlotInventoryBlueprintLibrary::GetInventoryComponent(UObject* Holder, FName InventoryTag)
+USlotInventoryComponentBase* USlotInventoryBlueprintLibrary::GetInventoryComponent(UObject* Holder, FName InventoryTag)
 {
     if (Holder->GetClass()->ImplementsInterface(UInventoryHolderInterface::StaticClass()))
         return IInventoryHolderInterface::Execute_GetInventoryComponent(Holder, InventoryTag);
 
     if (AActor* Actor = Cast<AActor>(Holder); InventoryTag == NAME_None)
-        return Actor->FindComponentByClass<USlotInventoryComponent>();
+        return Actor->FindComponentByClass<USlotInventoryComponentBase>();
 
     return nullptr;
 }

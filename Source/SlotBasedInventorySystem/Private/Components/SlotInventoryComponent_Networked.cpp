@@ -59,17 +59,17 @@ void USlotInventoryComponent_Networked::Server_RequestClearSlotAtIndex_Implement
     ClearSlotAtIndex(Index);
 }
 
-void USlotInventoryComponent_Networked::Server_RequestDropSlotTowardOtherInventoryAtIndex_Implementation(int32 SourceIndex, USlotInventoryComponent* DestinationInventory, int32 DestinationIndex, int32 MaxAmount)
+void USlotInventoryComponent_Networked::Server_RequestDropSlotTowardOtherInventoryAtIndex_Implementation(int32 SourceIndex, USlotInventoryComponentBase* DestinationInventory, int32 DestinationIndex, int32 MaxAmount)
 {
     DropSlotTowardOtherInventoryAtIndex(SourceIndex, DestinationInventory, DestinationIndex, MaxAmount);
 }
 
-void USlotInventoryComponent_Networked::Server_RequestDropSlotTowardOtherInventory_Implementation(int32 SourceIndex, USlotInventoryComponent* DestinationInventory)
+void USlotInventoryComponent_Networked::Server_RequestDropSlotTowardOtherInventory_Implementation(int32 SourceIndex, USlotInventoryComponentBase* DestinationInventory)
 {
     DropSlotTowardOtherInventory(SourceIndex, DestinationInventory);
 }
 
-void USlotInventoryComponent_Networked::Server_RequestDropSlotFromOtherInventoryAtIndex_Implementation(int32 DestinationIndex, USlotInventoryComponent* SourceInventory, int32 SourceIndex, int32 MaxAmount)
+void USlotInventoryComponent_Networked::Server_RequestDropSlotFromOtherInventoryAtIndex_Implementation(int32 DestinationIndex, USlotInventoryComponentBase* SourceInventory, int32 SourceIndex, int32 MaxAmount)
 {
     if (IsValid(SourceInventory))
     {
@@ -77,7 +77,7 @@ void USlotInventoryComponent_Networked::Server_RequestDropSlotFromOtherInventory
     }
 }
 
-void USlotInventoryComponent_Networked::Server_RequestDropSlotFromOtherInventory_Implementation(USlotInventoryComponent* SourceInventory, int32 SourceIndex)
+void USlotInventoryComponent_Networked::Server_RequestDropSlotFromOtherInventory_Implementation(USlotInventoryComponentBase* SourceInventory, int32 SourceIndex)
 {
     if (IsValid(SourceInventory))
     {
@@ -169,7 +169,7 @@ void USlotInventoryComponent_Networked::ReceievedUpdateSlotsValues(const TArray<
 
 /** Capacity Update */
 
-void USlotInventoryComponent_Networked::OnCapacityChanged(USlotInventoryComponent* SlotInventoryComponent, int32 NewCapacity)
+void USlotInventoryComponent_Networked::OnCapacityChanged(USlotInventoryComponentBase* SlotInventoryComponent, int32 NewCapacity)
 {
     if (SlotInventoryComponent == this)
     {

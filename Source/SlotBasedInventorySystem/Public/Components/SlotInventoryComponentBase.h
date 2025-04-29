@@ -5,21 +5,21 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Structures/SlotInventorySystemStructs.h"
-#include "SlotInventoryComponent.generated.h"
+#include "SlotInventoryComponentBase.generated.h"
 
 class USlotModifier;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryCapacityChangedSignature, USlotInventoryComponent*, SlotInventoryComponent, int32, NewCapacity);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryContentChangedSignature, USlotInventoryComponent*, SlotInventoryComponent, const TArray<int32>&, ChangedSlots);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryCapacityChangedSignature, USlotInventoryComponentBase*, SlotInventoryComponent, int32, NewCapacity);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryContentChangedSignature, USlotInventoryComponentBase*, SlotInventoryComponent, const TArray<int32>&, ChangedSlots);
 
 UCLASS( Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SLOTBASEDINVENTORYSYSTEM_API USlotInventoryComponent : public UActorComponent
+class SLOTBASEDINVENTORYSYSTEM_API USlotInventoryComponentBase : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
 
-	USlotInventoryComponent();
+	USlotInventoryComponentBase();
 
 	UPROPERTY(BlueprintAssignable)
 	FOnInventoryCapacityChangedSignature OnInventoryCapacityChanged;
@@ -88,10 +88,10 @@ public:
 	bool TryModifyContentWithoutOverflow(const TMap<FName, int32>& IdsAndCounts);
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Action")
-	bool DropSlotTowardOtherInventoryAtIndex(int32 SourceIndex, USlotInventoryComponent* Destination, int32 DestinationIndex, int32 MaxAmount = 255);
+	bool DropSlotTowardOtherInventoryAtIndex(int32 SourceIndex, USlotInventoryComponentBase* Destination, int32 DestinationIndex, int32 MaxAmount = 255);
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Action")
-	bool DropSlotTowardOtherInventory(int32 SourceIndex, USlotInventoryComponent* Destination);
+	bool DropSlotTowardOtherInventory(int32 SourceIndex, USlotInventoryComponentBase* Destination);
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Action")
 	void RegroupSlotAtIndexWithSimilarIds(int32 Index);
