@@ -18,6 +18,18 @@ bool USlotInventoryBlueprintLibrary::IsEmptySlot(const FInventorySlot& Slot)
     return Slot.IsEmpty();
 }
 
+bool USlotInventoryBlueprintLibrary::SlotHasModifier(const FInventorySlot& Slot, FName Type)
+{
+    return Slot.GetConstModifierByType(Type) != nullptr;
+}
+
+FSlotModifier& USlotInventoryBlueprintLibrary::SlotGetOrMakeModifier(FInventorySlot& Slot, FName Type, FInstancedStruct Value)
+{
+    if (FSlotModifier* Modifier = Slot.GetModifierByType(Type))
+        return *Modifier;
+    return Slot.Modifiers.Emplace_GetRef(Type, Value);
+}
+
 USlotInventoryComponentBase* USlotInventoryBlueprintLibrary::GetInventoryComponent(UObject* Holder, FName InventoryTag)
 {
     if (Holder->GetClass()->ImplementsInterface(UInventoryHolderInterface::StaticClass()))

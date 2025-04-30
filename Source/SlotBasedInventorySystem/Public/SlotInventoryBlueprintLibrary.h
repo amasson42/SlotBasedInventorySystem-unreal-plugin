@@ -24,6 +24,12 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SlotInventory|Slot")
 	static bool IsEmptySlot(const FInventorySlot& Slot);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SlotInventory|Slot")
+	static bool SlotHasModifier(const FInventorySlot& Slot, FName Type);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "SlotInventory|Slot")
+	static FSlotModifier& SlotGetOrMakeModifier(UPARAM(Ref) FInventorySlot& Slot, FName Type, FInstancedStruct Value);
+
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SlotInventory|Component")
 	static class USlotInventoryComponentBase* GetInventoryComponent(UObject* Holder, FName InventoryTag);
 
