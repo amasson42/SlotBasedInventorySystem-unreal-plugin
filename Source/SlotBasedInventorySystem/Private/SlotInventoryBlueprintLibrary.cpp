@@ -23,9 +23,9 @@ bool USlotInventoryBlueprintLibrary::SlotHasModifier(const FInventorySlot& Slot,
     return Slot.GetConstModifierByType(Type) != nullptr;
 }
 
-FSlotModifier& USlotInventoryBlueprintLibrary::SlotGetOrMakeModifier(FInventorySlot& Slot, FName Type, FInstancedStruct Value)
+FItemModifier& USlotInventoryBlueprintLibrary::SlotGetOrMakeModifier(FInventorySlot& Slot, FName Type, FInstancedStruct Value)
 {
-    if (FSlotModifier* Modifier = Slot.GetModifierByType(Type))
+    if (FItemModifier* Modifier = Slot.GetModifierByType(Type))
         return *Modifier;
     return Slot.Modifiers.Emplace_GetRef(Type, Value);
 }
@@ -41,7 +41,7 @@ USlotInventoryComponentBase* USlotInventoryBlueprintLibrary::GetInventoryCompone
     return nullptr;
 }
 
-void USlotInventoryBlueprintLibrary::ModifierToString(const FSlotModifier& Modifier, FString& OutString)
+void USlotInventoryBlueprintLibrary::ModifierToString(const FItemModifier& Modifier, FString& OutString)
 {
     OutString = "";
     OutString += Modifier.Type.ToString();

@@ -7,8 +7,6 @@
 #include "Structures/SlotInventorySystemStructs.h"
 #include "SlotInventoryComponentBase.generated.h"
 
-class USlotModifier;
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryCapacityChangedSignature, USlotInventoryComponentBase*, SlotInventoryComponent, int32, NewCapacity);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryContentChangedSignature, USlotInventoryComponentBase*, SlotInventoryComponent, const TArray<int32>&, ChangedSlots);
 
@@ -73,7 +71,7 @@ public:
 	void GetMaxStackSizeForIds(const TSet<FName>& Ids, TMap<FName, int32>& MaxStackSizes) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Modifier")
-	bool AddModifierToSlotAtIndex(int32 Index, const FSlotModifier& NewModifier);
+	bool AddModifierToSlotAtIndex(int32 Index, const FItemModifier& NewModifier);
 
 
 	/** Content Management */

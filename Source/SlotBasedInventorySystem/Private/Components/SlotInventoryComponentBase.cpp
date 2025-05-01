@@ -160,7 +160,7 @@ void USlotInventoryComponentBase::ModifySlotQuantityAtIndex(int32 Index, int32 M
 	}
 }
 
-bool USlotInventoryComponentBase::AddModifierToSlotAtIndex(int32 Index, const FSlotModifier& NewModifier)
+bool USlotInventoryComponentBase::AddModifierToSlotAtIndex(int32 Index, const FItemModifier& NewModifier)
 {
     FInventorySlot* SlotPtr = Content.GetSlotPtrAtIndex(Index);
     if (!SlotPtr)

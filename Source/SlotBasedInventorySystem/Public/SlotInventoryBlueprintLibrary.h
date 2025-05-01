@@ -28,12 +28,12 @@ public:
 	static bool SlotHasModifier(const FInventorySlot& Slot, FName Type);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "SlotInventory|Slot")
-	static FSlotModifier& SlotGetOrMakeModifier(UPARAM(Ref) FInventorySlot& Slot, FName Type, FInstancedStruct Value);
+	static FItemModifier& SlotGetOrMakeModifier(UPARAM(Ref) FInventorySlot& Slot, FName Type, FInstancedStruct Value);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SlotInventory|Component")
 	static class USlotInventoryComponentBase* GetInventoryComponent(UObject* Holder, FName InventoryTag);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SlotInventory|Debug")
-	static void ModifierToString(const FSlotModifier& Modifier, FString& OutString);
+	static void ModifierToString(const FItemModifier& Modifier, FString& OutString);
 
 };

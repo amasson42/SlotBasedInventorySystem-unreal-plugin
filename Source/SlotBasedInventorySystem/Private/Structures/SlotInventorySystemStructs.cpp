@@ -85,9 +85,9 @@ bool FInventorySlot::ReceiveSlot(FInventorySlot& SourceSlot, int32 MaxTransferAm
     return true;
 }
 
-const FSlotModifier* FInventorySlot::GetConstModifierByType(const FName& ModifierType) const
+const FItemModifier* FInventorySlot::GetConstModifierByType(const FName& ModifierType) const
 {
-    for (const FSlotModifier& Modifier : Modifiers)
+    for (const FItemModifier& Modifier : Modifiers)
     {
         if (Modifier.Type == ModifierType)
             return &Modifier;
@@ -95,9 +95,9 @@ const FSlotModifier* FInventorySlot::GetConstModifierByType(const FName& Modifie
     return nullptr;
 }
 
-FSlotModifier* FInventorySlot::GetModifierByType(const FName& ModifierType)
+FItemModifier* FInventorySlot::GetModifierByType(const FName& ModifierType)
 {
-    for (FSlotModifier& Modifier : Modifiers)
+    for (FItemModifier& Modifier : Modifiers)
     {
         if (Modifier.Type == ModifierType)
             return &Modifier;
@@ -105,18 +105,18 @@ FSlotModifier* FInventorySlot::GetModifierByType(const FName& ModifierType)
     return nullptr;
 }
 
-void FInventorySlot::GetConstModifiersByType(const FName& ModifierType, TArray<const FSlotModifier*>& OutModifiers) const
+void FInventorySlot::GetConstModifiersByType(const FName& ModifierType, TArray<const FItemModifier*>& OutModifiers) const
 {
-    for (const FSlotModifier& Modifier : Modifiers)
+    for (const FItemModifier& Modifier : Modifiers)
     {
         if (Modifier.Type == ModifierType)
             OutModifiers.Add(&Modifier);
     }
 }
 
-void FInventorySlot::GetModifiersByType(const FName& ModifierType, TArray<FSlotModifier*>& OutModifiers)
+void FInventorySlot::GetModifiersByType(const FName& ModifierType, TArray<FItemModifier*>& OutModifiers)
 {
-    for (FSlotModifier& Modifier : Modifiers)
+    for (FItemModifier& Modifier : Modifiers)
     {
         if (Modifier.Type == ModifierType)
             OutModifiers.Add(&Modifier);

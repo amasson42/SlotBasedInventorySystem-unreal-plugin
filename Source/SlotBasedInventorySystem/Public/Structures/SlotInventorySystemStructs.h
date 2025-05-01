@@ -9,7 +9,7 @@
 
 
 USTRUCT(BlueprintType)
-struct FSlotModifier // Rename to FItemModifier
+struct FItemModifier
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -33,7 +33,7 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot // : public FFastArraySeriali
 	int32 Quantity = 0;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
-    TArray<FSlotModifier> Modifiers;
+    TArray<FItemModifier> Modifiers;
 
 
 	bool IsEmpty() const;
@@ -42,10 +42,10 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot // : public FFastArraySeriali
 	bool ReceiveStack(const FName& InItem, int32& InoutQuantity, bool bAllOrNothing = false, int32 MaxStackSize = 255);
 	bool ReceiveSlot(FInventorySlot& SourceSlot, int32 MaxTransfertAmount, int32 MaxStackSize = 255);
 
-	const FSlotModifier* GetConstModifierByType(const FName& ModifierType) const;
-	FSlotModifier* GetModifierByType(const FName& ModifierType);
-	void GetConstModifiersByType(const FName& ModifierType, TArray<const FSlotModifier*>& Modifiers) const;
-	void GetModifiersByType(const FName& ModifierType, TArray<FSlotModifier*>& Modifiers);
+	const FItemModifier* GetConstModifierByType(const FName& ModifierType) const;
+	FItemModifier* GetModifierByType(const FName& ModifierType);
+	void GetConstModifiersByType(const FName& ModifierType, TArray<const FItemModifier*>& Modifiers) const;
+	void GetModifiersByType(const FName& ModifierType, TArray<FItemModifier*>& Modifiers);
 };
 
 
