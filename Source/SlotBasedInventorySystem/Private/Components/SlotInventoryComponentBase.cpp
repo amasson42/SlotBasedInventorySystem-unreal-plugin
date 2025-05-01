@@ -80,14 +80,6 @@ bool USlotInventoryComponentBase::SetSlotValueAtIndex(int32 Index, const FInvent
 	return false;
 }
 
-bool USlotInventoryComponentBase::IsEmptySlotAtIndex(int32 Index) const
-{
-	if (const FInventorySlot* SlotPtr = Content.GetSlotConstPtrAtIndex(Index))
-		return SlotPtr->IsEmpty();
-
-	return false;
-}
-
 bool USlotInventoryComponentBase::ClearSlotAtIndex(int32 Index)
 {
 	if (FInventorySlot* SlotPtr = Content.GetSlotPtrAtIndex(Index))
@@ -102,28 +94,6 @@ bool USlotInventoryComponentBase::ClearSlotAtIndex(int32 Index)
 	}
 
 	return false;
-}
-
-int32 USlotInventoryComponentBase::GetEmptySlotCounts() const
-{
-	int32 Total = 0;
-
-	for (const FInventorySlot& Slot : Content.Slots)
-	{
-		if (Slot.IsEmpty())
-			++Total;
-	}
-	return Total;
-}
-
-bool USlotInventoryComponentBase::ContainsOnlyEmptySlots() const
-{
-	for (const FInventorySlot& Slot : Content.Slots)
-	{
-		if (!Slot.IsEmpty())
-			return false;
-	}
-	return true;
 }
 
 void USlotInventoryComponentBase::ModifySlotQuantityAtIndex(int32 Index, int32 ModifyAmount, bool bAllOrNothing, int32& Overflow)
@@ -189,20 +159,6 @@ void USlotInventoryComponentBase::GetMaxStackSizeForIds(const TSet<FName>& Ids, 
 
 
 /** Content Management */
-
-int32 USlotInventoryComponentBase::GetItemQuantity(const FName& Name) const
-{
-	int32 Total = 0;
-
-	for (const FInventorySlot& Slot : Content.Slots)
-	{
-		if (Slot.IsEmpty()) continue;
-
-		if (Slot.Item == Name)
-			Total += Slot.Quantity;
-	}
-	return Total;
-}
 
 bool USlotInventoryComponentBase::ModifyContent(const TMap<FName, int32>& Items, TMap<FName, int32>& Overflows)
 {

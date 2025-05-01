@@ -50,18 +50,9 @@ public:
 	bool SetSlotValueAtIndex(int32 Index, const FInventorySlot& NewSlotValue);
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Quantity")
-	bool IsEmptySlotAtIndex(int32 Index) const;
-
-	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Quantity")
 	bool ClearSlotAtIndex(int32 Index);
 
-	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Quantity") // TODO: Move to BP lib
-	int32 GetEmptySlotCounts() const;
-
-	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Quantity") // TODO: Move to BP lib
-	bool ContainsOnlyEmptySlots() const;
-
-	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Quantity")
+	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Quantity") // TODO: Remove this and use ModifyContent
 	void ModifySlotQuantityAtIndex(int32 Index, int32 ModifyAmount, bool bAllOrNothing, int32& Overflow);
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Quantity") // TODO: Move to external interface IInventoryRule
@@ -75,9 +66,6 @@ public:
 
 
 	/** Content Management */
-
-	UFUNCTION(BlueprintCallable, Category = "Content|Quantity") // TODO: Move to BP lib
-	int32 GetItemQuantity(const FName& Item) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Modify")
 	bool ModifyContent(const TMap<FName, int32>& Items, TMap<FName, int32>& Overflows);
@@ -129,7 +117,7 @@ public:
 
 protected:
 
-	UPROPERTY(EditAnywhere, Category = "Content", meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Content", meta = (AllowPrivateAccess = true))
 	FInventoryContent Content;
 
 	TSet<int32> DirtySlots;

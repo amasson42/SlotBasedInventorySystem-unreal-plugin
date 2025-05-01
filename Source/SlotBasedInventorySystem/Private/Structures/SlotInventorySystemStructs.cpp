@@ -47,7 +47,10 @@ bool FInventorySlot::ReceiveStack(const FName& InItem, int32& InoutQuantity, boo
     if (Item != InItem)
     {
         if (IsEmpty())
+        {
+            Reset();
             Item = InItem;
+        }
         else
             return false;
     }
@@ -253,7 +256,7 @@ void FInventoryContent::RegroupSimilarItemsAtIndex(int32 Index, FContentModifica
             if (!Slot.Modifiers.IsEmpty())
                 continue;
 
-            bool bMerged = TargetSlot->ReceiveSlot(Slot, 255, MaxStackSize);
+            bool bMerged = TargetSlot->ReceiveSlot(Slot, Slot.Quantity, MaxStackSize);
             if (bMerged)
             {
                 ModificationResult.bModifiedSomething = true;
