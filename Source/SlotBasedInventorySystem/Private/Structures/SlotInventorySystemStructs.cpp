@@ -8,71 +8,81 @@
 
 bool FInventorySlot::IsEmpty() const
 {
-    return (ID == NAME_None || Count == 0) && Modifiers.IsEmpty();
+    return (Item == NAME_None || Quantity == 0) && Modifiers.IsEmpty();
 }
 
 void FInventorySlot::Reset()
 {
-    ID = NAME_None;
-    Count = 0;
+    Item = NAME_None;
+    Quantity = 0;
     Modifiers.Reset();
 }
 
-void FInventorySlot::ModifyCountWithOverflow(int32 ModifyAmount, int32& Overflow, int32 MaxStackSize)
+bool FInventorySlot::ModifyQuantity(int32& InoutQuantity, bool bAllOrNothing, int32 MaxStackSize)
 {
-    int32 NewCount = Count + ModifyAmount;
+    const int32 NewQuantity = Quantity + InoutQuantity;
+    int32 TransferQuantity;
 
-    if (NewCount < 0)
-    {
-        Overflow = Count + ModifyAmount;
-        Count = 0;
-    }
-    else if (NewCount > MaxStackSize)
-    {
-        Overflow = Count + ModifyAmount - MaxStackSize;
-        Count = MaxStackSize;
-    }
+    if (NewQuantity < 0)
+        TransferQuantity = -Quantity;
+    else if (NewQuantity > MaxStackSize)
+        TransferQuantity = MaxStackSize - Quantity;
     else
-    {
-        Overflow = 0;
-        Count = NewCount;
-    }
-}
+        TransferQuantity = InoutQuantity;
 
-bool FInventorySlot::TryModifyCountByExact(int32 ModifyAmount, int32 MaxStackSize)
-{
-    int32 NewCount = Count + ModifyAmount;
-
-    if (NewCount < 0 || NewCount > MaxStackSize)
+    if (bAllOrNothing && TransferQuantity != InoutQuantity)
         return false;
 
-    Count = NewCount;
+    if (TransferQuantity == 0)
+        return false;
+
+    Quantity += TransferQuantity;
+    InoutQuantity -= TransferQuantity;
+
     return true;
 }
 
-bool FInventorySlot::AddIdAndCount(const FName& SlotId, int32 ModifyAmount, int32& Overflow, int32 MaxStackSize)
+bool FInventorySlot::ReceiveStack(const FName& InItem, int32& InoutQuantity, bool bAllOrNothing, int32 MaxStackSize)
 {
-    if (IsEmpty())
+    if (Item != InItem)
     {
-        if (ModifyAmount < 0)
-        {
-            Overflow = ModifyAmount;
+        if (IsEmpty())
+            Item = InItem;
+        else
             return false;
-        }
-        ID = SlotId;
-        Count = FMath::Min(ModifyAmount, int32(MaxStackSize));
-        Overflow = ModifyAmount - Count;
-        return Overflow != ModifyAmount;
     }
 
-    if (ID != SlotId)
-    {
-        Overflow = ModifyAmount;
+    if (!Modifiers.IsEmpty())
         return false;
-    }
 
-    ModifyCountWithOverflow(ModifyAmount, Overflow, MaxStackSize);
-    return Overflow != ModifyAmount;
+    return ModifyQuantity(InoutQuantity, bAllOrNothing, MaxStackSize);
+}
+
+bool FInventorySlot::ReceiveSlot(FInventorySlot& SourceSlot, int32 MaxTransferAmount, int32 MaxStackSize)
+{
+    if (this == &SourceSlot)
+        return false;
+
+    if (IsEmpty())
+        Item = SourceSlot.Item;
+
+    if (Item != SourceSlot.Item || !Modifiers.IsEmpty() || !SourceSlot.Modifiers.IsEmpty())
+        return false;
+
+    const int32 TotalQuantity = Quantity + SourceSlot.Quantity;
+    const int32 NewQuantity = FMath::Min(TotalQuantity, MaxStackSize);
+
+    const int32 TotalTransferAmount = NewQuantity - Quantity;
+    const int32 TransferAmount = FMath::Min(TotalTransferAmount, MaxTransferAmount);
+
+    if (TransferAmount <= 0)
+        return false;
+
+    SourceSlot.Quantity -= TransferAmount;
+    if (SourceSlot.Quantity == 0)
+        SourceSlot.Reset();
+    Quantity += TransferAmount;
+    return true;
 }
 
 const FSlotModifier* FInventorySlot::GetConstModifierByType(const FName& ModifierType) const
@@ -138,67 +148,63 @@ const FInventorySlot* FInventoryContent::GetSlotConstPtrAtIndex(int32 Index) con
 	return &(Slots[Index]);
 }
 
-FInventoryContent::FContentModificationResult::FContentModificationResult(TSet<int32>* InModifiedSlots, TMap<FName, int32>* InOverflows)
-: bModifiedSomething(false), bCreatedEmptySlot(false),
-    ModifiedSlots(InModifiedSlots), Overflows(InOverflows)
+FInventoryContent::FContentModificationResult::FContentModificationResult(TSet<int32>* InModifiedSlots, FItemsPack* InOverflows)
+: ModifiedSlots(InModifiedSlots), Overflows(InOverflows)
 {}
 
-void FInventoryContent::ModifyContentWithValues(const TMap<FName, int32>& IdsAndCounts, const TMap<FName, int32>& MaxStackSizes, FContentModificationResult& ModificationResult)
+void FInventoryContent::ModifyContent(const FItemsPack& Items, const TMap<FName, int32>& MaxStackSizes, FContentModificationResult& ModificationResult)
 {
     bool bModified = false;
     bool bHasPositiveOverflow = false;
     bool bHasNewEmptySlots = false;
 
-    for (const TPair<FName, int32>& IdAndCount : IdsAndCounts)
+    for (auto& ItemAndQuantity : Items)
     {
-        const FName& SlotId = IdAndCount.Key;
-        int32 ModifyAmount = IdAndCount.Value;
-        const int32 MaxStackSize = MaxStackSizes[SlotId];
+        const FName& Item = ItemAndQuantity.Key;
+        int32 ModifyQuantity = ItemAndQuantity.Value;
+        const int32 MaxStackSize = MaxStackSizes[Item];
 
         FContentModificationResult Result(ModificationResult.ModifiedSlots, nullptr);
-        ReceiveSlotOverflow(SlotId, ModifyAmount, MaxStackSize, false, Result);
-        ReceiveSlotOverflow(SlotId, ModifyAmount, MaxStackSize, true, Result);
+        ReceiveStack(Item, ModifyQuantity, MaxStackSize, true, Result);
+        ReceiveStack(Item, ModifyQuantity, MaxStackSize, false, Result);
         bModified = Result.bModifiedSomething;
         bHasNewEmptySlots = Result.bCreatedEmptySlot;
 
-        if (ModifyAmount != 0)
+        if (ModifyQuantity != 0)
         {
-            if (ModificationResult.Overflows)
-                ModificationResult.Overflows->Add(SlotId, ModifyAmount);
-            if (ModifyAmount > 0)
+            if (ModificationResult.Overflows != nullptr)
+                ModificationResult.Overflows->Add(Item, ModifyQuantity);
+            if (ModifyQuantity > 0)
                 bHasPositiveOverflow = true;
         }
     }
 
-    if (bModified && bHasPositiveOverflow && bHasNewEmptySlots && ModificationResult.Overflows)
+    if (bModified && bHasPositiveOverflow && bHasNewEmptySlots && ModificationResult.Overflows != nullptr)
     {
-        if (ModificationResult.Overflows)
+        if (ModificationResult.Overflows != nullptr)
         {
-            const TMap<FName, int32> NewModifications = *ModificationResult.Overflows;
+            const FItemsPack NewModifications = *ModificationResult.Overflows;
             ModificationResult.Overflows->Reset();
-            ModifyContentWithValues(NewModifications, MaxStackSizes, ModificationResult);
+            ModifyContent(NewModifications, MaxStackSizes, ModificationResult);
         }
     }
 }
 
-void FInventoryContent::ReceiveSlotOverflow(const FName& SlotId, int32& InoutOverflow, int32 MaxStackSize, bool bTargetEmptySlots, FContentModificationResult& ModificationResult)
+void FInventoryContent::ReceiveStack(const FName& Item, int32& InoutQuantity, int32 MaxStackSize, bool bTargetOccupiedSlots, FContentModificationResult& ModificationResult)
 {
-    for (int32 i = 0; i < Slots.Num() && InoutOverflow != 0; i++)
+    for (int32 i = 0; i < Slots.Num() && InoutQuantity != 0; i++)
     {
         FInventorySlot& Slot(Slots[i]);
 
-        if (Slot.IsEmpty() != bTargetEmptySlots)
+        if (bTargetOccupiedSlots && Slot.IsEmpty())
             continue;
 
-        if (!Slot.Modifiers.IsEmpty())
-            continue;
-
-        if (Slot.AddIdAndCount(SlotId, InoutOverflow, InoutOverflow, MaxStackSize))
+        if (Slot.ReceiveStack(Item, InoutQuantity, false, MaxStackSize))
         {
             ModificationResult.bModifiedSomething = true;
             if (Slot.IsEmpty())
                 ModificationResult.bCreatedEmptySlot = true;
-            if (ModificationResult.ModifiedSlots)
+            if (ModificationResult.ModifiedSlots != nullptr)
                 ModificationResult.ModifiedSlots->Add(i);
         }
     }
@@ -207,34 +213,22 @@ void FInventoryContent::ReceiveSlotOverflow(const FName& SlotId, int32& InoutOve
 bool FInventoryContent::ReceiveSlotAtIndex(FInventorySlot& InoutSlot, int32 Index, int32 MaxStackSize, int32 MaxTransferAmount)
 {
     FInventorySlot* LocalSlot = GetSlotPtrAtIndex(Index);
-    if (!LocalSlot)
+    if (!LocalSlot || LocalSlot == &InoutSlot)
         return false;
 
-    if (LocalSlot->IsEmpty())
-    {
-        if (InoutSlot.IsEmpty())
-            return false;
+    if (LocalSlot->ReceiveSlot(InoutSlot, MaxTransferAmount, MaxStackSize))
+        return true;
 
-        LocalSlot->ID = InoutSlot.ID;
-        LocalSlot->Count = 0;
+    if (!InoutSlot.IsEmpty() && LocalSlot->Item != InoutSlot.Item && LocalSlot->Quantity <= MaxStackSize)
+    {
+        Swap(InoutSlot, *LocalSlot);
+        return true;
     }
 
-    const bool bMergeable = LocalSlot->ID == InoutSlot.ID
-        && LocalSlot->Modifiers.IsEmpty()
-        && InoutSlot.Modifiers.IsEmpty();
-    if (bMergeable)
-        return MergeSlotsWithSimilarIds(*LocalSlot, InoutSlot, MaxStackSize, MaxTransferAmount);
-
-    bool bCanReceiveSlot = InoutSlot.Count <= MaxTransferAmount && InoutSlot.Count <= MaxStackSize;
-    if (!bCanReceiveSlot)
-        return false;
-
-    SwapSlots(InoutSlot, *LocalSlot);
-
-    return true;
+    return false;
 }
 
-void FInventoryContent::RegroupSlotsWithSimilarIdsAtIndex(int32 Index, FContentModificationResult& ModificationResult, int32 MaxStackSize, FInventorySlot* CachedSlotPtr)
+void FInventoryContent::RegroupSimilarItemsAtIndex(int32 Index, FContentModificationResult& ModificationResult, int32 MaxStackSize, FInventorySlot* CachedSlotPtr)
 {
     FInventorySlot* TargetSlot = CachedSlotPtr ? CachedSlotPtr : GetSlotPtrAtIndex(Index);
 
@@ -244,9 +238,9 @@ void FInventoryContent::RegroupSlotsWithSimilarIdsAtIndex(int32 Index, FContentM
     if (TargetSlot->IsEmpty())
         return;
 
-    for (int32 SlotIndex = 0; SlotIndex < Slots.Num() && TargetSlot->Count < MaxStackSize; SlotIndex++)
+    for (int32 SlotIndex = 0; SlotIndex < Slots.Num() && TargetSlot->Quantity < MaxStackSize; SlotIndex++)
     {
-        if (TargetSlot->Count >= MaxStackSize)
+        if (TargetSlot->Quantity >= MaxStackSize)
             break;
 
         if (SlotIndex == Index)
@@ -254,12 +248,12 @@ void FInventoryContent::RegroupSlotsWithSimilarIdsAtIndex(int32 Index, FContentM
 
         FInventorySlot& Slot = Slots[SlotIndex];
         
-        if (!Slot.IsEmpty() && Slot.ID == TargetSlot->ID)
+        if (!Slot.IsEmpty() && Slot.Item == TargetSlot->Item)
         {
             if (!Slot.Modifiers.IsEmpty())
                 continue;
 
-            bool bMerged = MergeSlotsWithSimilarIds(*TargetSlot, Slot, MaxStackSize);
+            bool bMerged = TargetSlot->ReceiveSlot(Slot, 255, MaxStackSize);
             if (bMerged)
             {
                 ModificationResult.bModifiedSomething = true;
@@ -273,34 +267,6 @@ void FInventoryContent::RegroupSlotsWithSimilarIdsAtIndex(int32 Index, FContentM
     if (ModificationResult.bModifiedSomething)
         if (ModificationResult.ModifiedSlots)
             ModificationResult.ModifiedSlots->Add(Index);
-}
-
-bool FInventoryContent::MergeSlotsWithSimilarIds(FInventorySlot& DestinationSlot, FInventorySlot& SourceSlot, int32 MaxStackSize, int32 MaxTransferAmount)
-{
-    checkf(SourceSlot.ID == DestinationSlot.ID, TEXT("Tried to merge slots with different Ids (%s!=%s)"), *SourceSlot.ID.ToString(), *DestinationSlot.ID.ToString());
-
-    const int32 LocalCount = DestinationSlot.Count;
-    const int32 ReceiveCount = SourceSlot.Count;
-
-    const int32 TotalCount = LocalCount + ReceiveCount;
-    const int32 StackCount = FMath::Min(TotalCount, int32(MaxStackSize));
-
-    const int32 TotalTransferAmount = StackCount - LocalCount;
-    const int32 TransferAmount = FMath::Min(TotalTransferAmount, int32(MaxTransferAmount));
-
-    if (TransferAmount == 0)
-        return false;
-
-    SourceSlot.Count -= TransferAmount;
-    if (SourceSlot.Count == 0)
-		SourceSlot.Reset();
-    DestinationSlot.Count += TransferAmount;
-    return true;
-}
-
-void FInventoryContent::SwapSlots(FInventorySlot& FirstSlot, FInventorySlot& SecondSlot)
-{
-    Swap(FirstSlot, SecondSlot);
 }
 
 int32 FInventoryContent::GetFirstEmptySlotIndex() const

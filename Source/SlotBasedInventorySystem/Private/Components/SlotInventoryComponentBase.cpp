@@ -137,11 +137,12 @@ void USlotInventoryComponentBase::ModifySlotCountAtIndex(int32 Index, int32 Modi
 		return;
 	}
 
-	const int32 MaxStackSize = GetMaxStackSizeForID(SlotPtr->ID);
+	const int32 MaxStackSize = GetMaxStackSizeForID(SlotPtr->Item);
 
 	if (bAllOrNothing)
 	{
-		bool bModified = SlotPtr->TryModifyCountByExact(ModifyAmount, MaxStackSize);
+		Overflow = ModifyAmount;
+		bool bModified = SlotPtr->ModifyQuantity(Overflow, true, MaxStackSize);
 		if (bModified)
 		{
 			Overflow = 0;
@@ -152,7 +153,8 @@ void USlotInventoryComponentBase::ModifySlotCountAtIndex(int32 Index, int32 Modi
 	}
 	else
 	{
-		SlotPtr->ModifyCountWithOverflow(ModifyAmount, Overflow, MaxStackSize);
+		Overflow = ModifyAmount;
+		SlotPtr->ModifyQuantity(Overflow, false, MaxStackSize);
 		if (Overflow != ModifyAmount)
 			MarkDirtySlot(Index);
 	}
@@ -196,8 +198,8 @@ int32 USlotInventoryComponentBase::GetContentIdCount(const FName& Id) const
 	{
 		if (Slot.IsEmpty()) continue;
 
-		if (Slot.ID == Id)
-			Total += Slot.Count;
+		if (Slot.Item == Id)
+			Total += Slot.Quantity;
 	}
 	return Total;
 }
@@ -207,8 +209,9 @@ bool USlotInventoryComponentBase::ModifyContentWithOverflow(const TMap<FName, in
 	const TMap<FName, int32>& MaxStackSizes = GetMaxStackSizesFromIds(IdsAndCounts);
 
 	TSet<int32> ModifiedSlots;
+	Overflows.Reset();
 	FInventoryContent::FContentModificationResult ModificationResult(&ModifiedSlots, &Overflows);
-	Content.ModifyContentWithValues(IdsAndCounts, MaxStackSizes, ModificationResult);
+	Content.ModifyContent(IdsAndCounts, MaxStackSizes, ModificationResult);
 
 	for (int32 ModifiedSlotIndex : ModifiedSlots)
 	{
@@ -229,7 +232,7 @@ bool USlotInventoryComponentBase::TryModifyContentWithoutOverflow(const TMap<FNa
 	TMap<FName, int32> TmpOverflows;
 	FInventoryContent::FContentModificationResult ModificationResult(&ModifiedSlots, &TmpOverflows);
 
-	TmpContent.ModifyContentWithValues(IdsAndCounts, MaxStackSizes, ModificationResult);
+	TmpContent.ModifyContent(IdsAndCounts, MaxStackSizes, ModificationResult);
 
 	if (!TmpOverflows.IsEmpty())
 		return false;
@@ -251,7 +254,7 @@ bool USlotInventoryComponentBase::DropSlotTowardOtherInventoryAtIndex(int32 Sour
 	if (!SourceSlot)
 		return false;
 
-	const int32 MaxStackSize = DestinationInventory->GetMaxStackSizeForID(SourceSlot->ID);
+	const int32 MaxStackSize = DestinationInventory->GetMaxStackSizeForID(SourceSlot->Item);
 
 	if (DestinationInventory->Content.ReceiveSlotAtIndex(*SourceSlot, DestinationIndex, MaxStackSize, MaxAmount))
 	{
@@ -281,11 +284,11 @@ bool USlotInventoryComponentBase::DropSlotTowardOtherInventory(int32 SourceIndex
 		if (FirstEmpty < 0)
 			return false;
 		
-		return DropSlotTowardOtherInventoryAtIndex(SourceIndex, Destination, FirstEmpty, SourceSlotPtr->Count);
+		return DropSlotTowardOtherInventoryAtIndex(SourceIndex, Destination, FirstEmpty, SourceSlotPtr->Quantity);
 	}
 
 	TMap<FName, int32> Modifications;
-	Modifications.Add(SourceSlotPtr->ID, SourceSlotPtr->Count);
+	Modifications.Add(SourceSlotPtr->Item, SourceSlotPtr->Quantity);
 
 	TMap<FName, int32> Overflows;
 	if (!Destination->ModifyContentWithOverflow(Modifications, Overflows))
@@ -297,13 +300,13 @@ bool USlotInventoryComponentBase::DropSlotTowardOtherInventory(int32 SourceIndex
 		return true;
 	}
 
-	checkf(Overflows.Contains(SourceSlotPtr->ID), TEXT("Overflow is not empty but does not contains SourceSlotPtr->ID"));
-	const int32 NewCount = Overflows[SourceSlotPtr->ID];
+	checkf(Overflows.Contains(SourceSlotPtr->Item), TEXT("Overflow is not empty but does not contains SourceSlotPtr->ID"));
+	const int32 NewCount = Overflows[SourceSlotPtr->Item];
 
-	if (SourceSlotPtr->Count == NewCount)
+	if (SourceSlotPtr->Quantity == NewCount)
 		return false;
 
-	SourceSlotPtr->Count = NewCount;
+	SourceSlotPtr->Quantity = NewCount;
 	return SetSlotValueAtIndex(SourceIndex, *SourceSlotPtr);
 }
 
@@ -315,9 +318,9 @@ void USlotInventoryComponentBase::RegroupSlotAtIndexWithSimilarIds(int32 Index)
 	FInventorySlot* Slot = Content.GetSlotPtrAtIndex(Index);
 	if (!Slot) return;
 
-	const int32 MaxStackSize = GetMaxStackSizeForID(Slot->ID);
+	const int32 MaxStackSize = GetMaxStackSizeForID(Slot->Item);
 
-	Content.RegroupSlotsWithSimilarIdsAtIndex(Index, ModificationResult, MaxStackSize, Slot);
+	Content.RegroupSimilarItemsAtIndex(Index, ModificationResult, MaxStackSize, Slot);
 
 	for (const int32 ModifiedSlotIndex : ModifiedSlots)
 		MarkDirtySlot(ModifiedSlotIndex);

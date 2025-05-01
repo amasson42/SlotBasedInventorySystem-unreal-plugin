@@ -9,7 +9,7 @@
 
 
 USTRUCT(BlueprintType)
-struct FSlotModifier
+struct FSlotModifier // Rename to FItemModifier
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -27,10 +27,10 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot // : public FFastArraySeriali
 
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
-	FName ID;
+	FName Item;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
-	int32 Count = 0;
+	int32 Quantity = 0;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
     TArray<FSlotModifier> Modifiers;
@@ -38,9 +38,9 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot // : public FFastArraySeriali
 
 	bool IsEmpty() const;
 	void Reset();
-	void ModifyCountWithOverflow(int32 ModifyAmount, int32& Overflow, int32 MaxStackSize = 255);
-	bool TryModifyCountByExact(int32 ModifyAmount, int32 MaxStackSize = 255);
-	bool AddIdAndCount(const FName& SlotId, int32 ModifyAmount, int32& Overflow, int32 MaxStackSize = 255);
+	bool ModifyQuantity(int32& InoutQuantity, bool bAllOrNothing = false, int32 MaxStackSize = 255);
+	bool ReceiveStack(const FName& InItem, int32& InoutQuantity, bool bAllOrNothing = false, int32 MaxStackSize = 255);
+	bool ReceiveSlot(FInventorySlot& SourceSlot, int32 MaxTransfertAmount, int32 MaxStackSize = 255);
 
 	const FSlotModifier* GetConstModifierByType(const FName& ModifierType) const;
 	FSlotModifier* GetModifierByType(const FName& ModifierType);
@@ -64,26 +64,24 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventoryContent // : public FFastArraySeri
 	FInventorySlot* GetSlotPtrAtIndex(int32 Index);
 	const FInventorySlot* GetSlotConstPtrAtIndex(int32 Index) const;
 
+	using FItemsPack = TMap<FName, int32>;
+
 	struct FContentModificationResult
 	{
-		bool bModifiedSomething;
-		bool bCreatedEmptySlot;
-		TSet<int32>* ModifiedSlots;
-		TMap<FName, int32>* Overflows;
+		bool bModifiedSomething = false;
+		bool bCreatedEmptySlot = false;
+		TSet<int32>* ModifiedSlots = nullptr;
+		FItemsPack* Overflows = nullptr;
 
-		FContentModificationResult(TSet<int32>* InModifiedSlots, TMap<FName, int32>* Overflows);
+		FContentModificationResult(TSet<int32>* InModifiedSlots, FItemsPack* Overflows);
 	};
 
-	void ModifyContentWithValues(const TMap<FName, int32>& IdsAndCounts, const TMap<FName, int32>& MaxStackSizes, FContentModificationResult& ModificationResult);
+	void ModifyContent(const FItemsPack& Items, const TMap<FName, int32>& MaxStackSizes, FContentModificationResult& ModificationResult);
 
-	void ReceiveSlotOverflow(const FName& SlotId, int32& InoutOverflow, int32 MaxStackSize, bool bTargetEmptySlots, FContentModificationResult& ModificationResult);
+	void ReceiveStack(const FName& Item, int32& InoutQuantity, int32 MaxStackSize, bool bTargetOccupiedSlots, FContentModificationResult& ModificationResult);
 	bool ReceiveSlotAtIndex(FInventorySlot& InoutSlot, int32 Index, int32 MaxStackSize = 255, int32 MaxTransferAmount = 255);
 
-	void RegroupSlotsWithSimilarIdsAtIndex(int32 Index, FContentModificationResult& ModificationResult, int32 MaxStackSize = 255, FInventorySlot* CachedSlotPtr = nullptr);
-
-	static bool MergeSlotsWithSimilarIds(FInventorySlot& DestinationSlot, FInventorySlot& SourceSlot, int32 MaxStackSize = 255, int32 MaxTransferAmount = 255);
-
-	static void SwapSlots(FInventorySlot& FirstSlot, FInventorySlot& SecondSlot);
+	void RegroupSimilarItemsAtIndex(int32 Index, FContentModificationResult& ModificationResult, int32 MaxStackSize = 255, FInventorySlot* CachedSlotPtr = nullptr);
 
 	int32 GetFirstEmptySlotIndex() const;
 };
