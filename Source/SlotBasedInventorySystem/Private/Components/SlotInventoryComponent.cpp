@@ -137,7 +137,7 @@ void USlotInventoryComponent::DropInventorySlotFromSourceToDestination(USlotInve
 
 void USlotInventoryComponent::Server_RequestRegroupSlotAtIndexWithSimilarIds_Implementation(int32 Index)
 {
-    RegroupSlotAtIndexWithSimilarIds(Index);
+    RegroupSimilarItemsAtIndex(Index);
 }
 
 

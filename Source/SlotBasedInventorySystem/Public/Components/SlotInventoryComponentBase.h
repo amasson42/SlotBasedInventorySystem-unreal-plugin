@@ -51,41 +51,41 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Content|Slot")
 	bool SetSlotValueAtIndex(int32 Index, const FInventorySlot& NewSlotValue);
 
-	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Count")
+	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Quantity")
 	bool IsEmptySlotAtIndex(int32 Index) const;
 
-	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Count")
+	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Quantity")
 	bool ClearSlotAtIndex(int32 Index);
 
-	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Count")
+	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Quantity") // TODO: Move to BP lib
 	int32 GetEmptySlotCounts() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Count")
+	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Quantity") // TODO: Move to BP lib
 	bool ContainsOnlyEmptySlots() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Count")
-	void ModifySlotCountAtIndex(int32 Index, int32 ModifyAmount, bool bAllOrNothing, int32& Overflow);
+	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Quantity")
+	void ModifySlotQuantityAtIndex(int32 Index, int32 ModifyAmount, bool bAllOrNothing, int32& Overflow);
 
-    UFUNCTION(BlueprintCallable, Category = "Content|Slot|Modifier", meta = (DeterminesOutputType = "ModifierClass"))
-    bool AddModifierToSlotAtIndex(int32 Index, const FSlotModifier& NewModifier);
-
-	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Count")
+	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Quantity") // TODO: Move to external interface IInventoryRule
 	virtual int32 GetMaxStackSizeForID(const FName& ID) const;
 
-	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Count")
+	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Quantity") // TODO: Remove when IInventoryRule is ready
 	void GetMaxStackSizeForIds(const TSet<FName>& Ids, TMap<FName, int32>& MaxStackSizes) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Content|Slot|Modifier")
+	bool AddModifierToSlotAtIndex(int32 Index, const FSlotModifier& NewModifier);
 
 
 	/** Content Management */
 
-	UFUNCTION(BlueprintCallable, Category = "Content|Count")
-	int32 GetContentIdCount(const FName& Id) const;
+	UFUNCTION(BlueprintCallable, Category = "Content|Quantity") // TODO: Move to BP lib
+	int32 GetItemQuantity(const FName& Item) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Modify")
-	bool ModifyContentWithOverflow(const TMap<FName, int32>& IdsAndCounts, TMap<FName, int32>& Overflows);
+	bool ModifyContent(const TMap<FName, int32>& Items, TMap<FName, int32>& Overflows);
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Modify")
-	bool TryModifyContentWithoutOverflow(const TMap<FName, int32>& IdsAndCounts);
+	bool TryModifyContentWithoutOverflow(const TMap<FName, int32>& Items);
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Action")
 	bool DropSlotTowardOtherInventoryAtIndex(int32 SourceIndex, USlotInventoryComponentBase* Destination, int32 DestinationIndex, int32 MaxAmount = 255);
@@ -94,14 +94,14 @@ public:
 	bool DropSlotTowardOtherInventory(int32 SourceIndex, USlotInventoryComponentBase* Destination);
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Action")
-	void RegroupSlotAtIndexWithSimilarIds(int32 Index);
+	void RegroupSimilarItemsAtIndex(int32 Index);
 
 
 protected:
 
 	/** Content Management */
 
-	const TMap<FName, int32> GetMaxStackSizesFromIds(const TMap<FName, int32>& IdsAndCounts) const;
+	const TMap<FName, int32> GetMaxStackSizesFromIds(const TMap<FName, int32>& IdsAndCounts) const; // TODO: Remove when IInventoryRule
 
 
 	/** Slot Updating */

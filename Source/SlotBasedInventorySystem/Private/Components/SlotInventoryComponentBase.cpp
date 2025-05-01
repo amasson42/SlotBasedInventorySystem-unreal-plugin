@@ -126,7 +126,7 @@ bool USlotInventoryComponentBase::ContainsOnlyEmptySlots() const
 	return true;
 }
 
-void USlotInventoryComponentBase::ModifySlotCountAtIndex(int32 Index, int32 ModifyAmount, bool bAllOrNothing, int32& Overflow)
+void USlotInventoryComponentBase::ModifySlotQuantityAtIndex(int32 Index, int32 ModifyAmount, bool bAllOrNothing, int32& Overflow)
 {
 	FInventorySlot* SlotPtr = Content.GetSlotPtrAtIndex(Index);
 
@@ -190,7 +190,7 @@ void USlotInventoryComponentBase::GetMaxStackSizeForIds(const TSet<FName>& Ids, 
 
 /** Content Management */
 
-int32 USlotInventoryComponentBase::GetContentIdCount(const FName& Id) const
+int32 USlotInventoryComponentBase::GetItemQuantity(const FName& Name) const
 {
 	int32 Total = 0;
 
@@ -198,20 +198,20 @@ int32 USlotInventoryComponentBase::GetContentIdCount(const FName& Id) const
 	{
 		if (Slot.IsEmpty()) continue;
 
-		if (Slot.Item == Id)
+		if (Slot.Item == Name)
 			Total += Slot.Quantity;
 	}
 	return Total;
 }
 
-bool USlotInventoryComponentBase::ModifyContentWithOverflow(const TMap<FName, int32>& IdsAndCounts, TMap<FName, int32>& Overflows)
+bool USlotInventoryComponentBase::ModifyContent(const TMap<FName, int32>& Items, TMap<FName, int32>& Overflows)
 {
-	const TMap<FName, int32>& MaxStackSizes = GetMaxStackSizesFromIds(IdsAndCounts);
+	const TMap<FName, int32>& MaxStackSizes = GetMaxStackSizesFromIds(Items);
 
 	TSet<int32> ModifiedSlots;
 	Overflows.Reset();
 	FInventoryContent::FContentModificationResult ModificationResult(&ModifiedSlots, &Overflows);
-	Content.ModifyContent(IdsAndCounts, MaxStackSizes, ModificationResult);
+	Content.ModifyContent(Items, MaxStackSizes, ModificationResult);
 
 	for (int32 ModifiedSlotIndex : ModifiedSlots)
 	{
@@ -221,9 +221,9 @@ bool USlotInventoryComponentBase::ModifyContentWithOverflow(const TMap<FName, in
 	return true;
 }
 
-bool USlotInventoryComponentBase::TryModifyContentWithoutOverflow(const TMap<FName, int32>& IdsAndCounts)
+bool USlotInventoryComponentBase::TryModifyContentWithoutOverflow(const TMap<FName, int32>& Items)
 {
-	const TMap<FName, int32>& MaxStackSizes = GetMaxStackSizesFromIds(IdsAndCounts);
+	const TMap<FName, int32>& MaxStackSizes = GetMaxStackSizesFromIds(Items);
 
 	TSet<int32> ModifiedSlots;
 
@@ -232,7 +232,7 @@ bool USlotInventoryComponentBase::TryModifyContentWithoutOverflow(const TMap<FNa
 	TMap<FName, int32> TmpOverflows;
 	FInventoryContent::FContentModificationResult ModificationResult(&ModifiedSlots, &TmpOverflows);
 
-	TmpContent.ModifyContent(IdsAndCounts, MaxStackSizes, ModificationResult);
+	TmpContent.ModifyContent(Items, MaxStackSizes, ModificationResult);
 
 	if (!TmpOverflows.IsEmpty())
 		return false;
@@ -291,7 +291,7 @@ bool USlotInventoryComponentBase::DropSlotTowardOtherInventory(int32 SourceIndex
 	Modifications.Add(SourceSlotPtr->Item, SourceSlotPtr->Quantity);
 
 	TMap<FName, int32> Overflows;
-	if (!Destination->ModifyContentWithOverflow(Modifications, Overflows))
+	if (!Destination->ModifyContent(Modifications, Overflows))
 		return false;
 
 	if (Overflows.IsEmpty())
@@ -300,17 +300,17 @@ bool USlotInventoryComponentBase::DropSlotTowardOtherInventory(int32 SourceIndex
 		return true;
 	}
 
-	checkf(Overflows.Contains(SourceSlotPtr->Item), TEXT("Overflow is not empty but does not contains SourceSlotPtr->ID"));
-	const int32 NewCount = Overflows[SourceSlotPtr->Item];
+	checkf(Overflows.Contains(SourceSlotPtr->Item), TEXT("Overflow is not empty but does not contains SourceSlotPtr->Item"));
+	const int32 NewQuantity = Overflows[SourceSlotPtr->Item];
 
-	if (SourceSlotPtr->Quantity == NewCount)
+	if (SourceSlotPtr->Quantity == NewQuantity)
 		return false;
 
-	SourceSlotPtr->Quantity = NewCount;
+	SourceSlotPtr->Quantity = NewQuantity;
 	return SetSlotValueAtIndex(SourceIndex, *SourceSlotPtr);
 }
 
-void USlotInventoryComponentBase::RegroupSlotAtIndexWithSimilarIds(int32 Index)
+void USlotInventoryComponentBase::RegroupSimilarItemsAtIndex(int32 Index)
 {
 	TSet<int32> ModifiedSlots;
 	FInventoryContent::FContentModificationResult ModificationResult(&ModifiedSlots, nullptr);
