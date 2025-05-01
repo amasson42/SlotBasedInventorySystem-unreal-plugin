@@ -89,6 +89,16 @@ bool USlotInventoryBlueprintLibrary::ContainsOnlyEmptySlots(const FInventoryCont
     return true;
 }
 
+int32 USlotInventoryBlueprintLibrary::GetFirstEmptySlotIndex(const FInventoryContent& Content)
+{
+    for (int32 i = 0; i < Content.Slots.Num(); i++)
+    {
+        if (Content.Slots[i].IsEmpty())
+            return i;
+    }
+    return -1;
+}
+
 int32 USlotInventoryBlueprintLibrary::GetItemQuantity(const FInventoryContent& Content, FName Item)
 {
     int32 Total = 0;

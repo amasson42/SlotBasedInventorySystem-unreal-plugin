@@ -236,11 +236,12 @@ bool USlotInventoryComponentBase::DropSlotTowardOtherInventory(int32 SourceIndex
 
 	if (!SourceSlotPtr->Modifiers.IsEmpty())
 	{
-		int32 FirstEmpty = Destination->Content.GetFirstEmptySlotIndex();
-		if (FirstEmpty < 0)
-			return false;
-		
-		return DropSlotTowardOtherInventoryAtIndex(SourceIndex, Destination, FirstEmpty, SourceSlotPtr->Quantity);
+		for (int i = 0; i < Destination->Content.Slots.Num(); i++)
+		{
+			if (Destination->Content.Slots[i].IsEmpty())
+				return DropSlotTowardOtherInventoryAtIndex(SourceIndex, Destination, i, SourceSlotPtr->Quantity);
+		}
+		return false;
 	}
 
 	TMap<FName, int32> Modifications;

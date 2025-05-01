@@ -271,13 +271,3 @@ void FInventoryContent::RegroupSimilarItemsAtIndex(int32 Index, FContentModifica
         if (ModificationResult.ModifiedSlots)
             ModificationResult.ModifiedSlots->Add(Index);
 }
-
-int32 FInventoryContent::GetFirstEmptySlotIndex() const
-{
-    for (int32 i = 0; i < Slots.Num(); i++)
-	{
-		if (Slots[i].IsEmpty())
-			return i;
-	}
-	return -1;
-}

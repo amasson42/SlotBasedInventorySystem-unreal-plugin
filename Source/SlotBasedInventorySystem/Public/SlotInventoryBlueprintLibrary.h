@@ -46,6 +46,9 @@ public:
 	static bool ContainsOnlyEmptySlots(const FInventoryContent& Content);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SlotInventory|Content")
+	static int32 GetFirstEmptySlotIndex(const FInventoryContent& Content);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SlotInventory|Content")
 	static int32 GetItemQuantity(const FInventoryContent& Content, FName Item);
 
 	/** Inventory Component */

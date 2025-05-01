@@ -83,7 +83,6 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventoryContent // : public FFastArraySeri
 
 	void RegroupSimilarItemsAtIndex(int32 Index, FContentModificationResult& ModificationResult, int32 MaxStackSize = 255, FInventorySlot* CachedSlotPtr = nullptr);
 
-	int32 GetFirstEmptySlotIndex() const;
 };
 
 // template<>
