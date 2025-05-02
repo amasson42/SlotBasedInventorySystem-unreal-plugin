@@ -112,7 +112,7 @@ void USlotInventoryComponentBase::ModifySlotQuantityAtIndex(int32 Index, int32 M
 	if (bAllOrNothing)
 	{
 		Overflow = ModifyAmount;
-		bool bModified = SlotPtr->ModifyQuantity(Overflow, true, MaxStackSize);
+		bool bModified = SlotPtr->ReceiveStack(SlotPtr->Item, Overflow, FSlotInventoryTransactionRule(true, true, false, 0), MaxStackSize);
 		if (bModified)
 		{
 			Overflow = 0;
@@ -124,7 +124,7 @@ void USlotInventoryComponentBase::ModifySlotQuantityAtIndex(int32 Index, int32 M
 	else
 	{
 		Overflow = ModifyAmount;
-		SlotPtr->ModifyQuantity(Overflow, false, MaxStackSize);
+		SlotPtr->ReceiveStack(SlotPtr->Item, Overflow, FSlotInventoryTransactionRule(), MaxStackSize);
 		if (Overflow != ModifyAmount)
 			MarkDirtySlot(Index);
 	}

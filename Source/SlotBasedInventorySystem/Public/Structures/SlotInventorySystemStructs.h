@@ -3,13 +3,33 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/DataTable.h"
 #include "InstancedStruct.h"
 #include "SlotInventorySystemStructs.generated.h"
 
+USTRUCT(BlueprintType)
+struct SLOTBASEDINVENTORYSYSTEM_API FSlotInventoryTransactionRule
+{
+	GENERATED_USTRUCT_BODY()
+
+	/** If true, the transaction must be fully completed or it fails (no partial transfers). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "Transaction")
+	bool bAtomic = false;
+
+	/** If true, the transaction can swap items between source and target slots if needed. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "Transaction")
+	bool bAllowSwap = true;
+
+	/** If true, merging is the only allowed behavior. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "Transaction")
+	bool bOnlyMerge = false;
+
+	/** Maximum number of items allowed to transfer. 0 means no maximum (transfer all possible). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "Transaction")
+	int32 MaxTransferQuantity = 0;
+};
 
 USTRUCT(BlueprintType)
-struct FItemModifier
+struct SLOTBASEDINVENTORYSYSTEM_API FItemModifier
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -36,11 +56,17 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot // : public FFastArraySeriali
     TArray<FItemModifier> Modifiers;
 
 
+	/** Is the slot empty */
 	bool IsEmpty() const;
+
+	/** Reset the slot to an empty value */
 	void Reset();
-	bool ModifyQuantity(int32& InoutQuantity, bool bAllOrNothing = false, int32 MaxStackSize = 255);
-	bool ReceiveStack(const FName& InItem, int32& InoutQuantity, bool bAllOrNothing = false, int32 MaxStackSize = 255);
-	bool ReceiveSlot(FInventorySlot& SourceSlot, int32 MaxTransfertAmount, int32 MaxStackSize = 255);
+
+	/** Receive a stack of item */
+	bool ReceiveStack(const FName& InItem, int32& InoutQuantity, const FSlotInventoryTransactionRule& Rule, int32 MaxStackSize);
+
+	/** Receive another slot */
+	bool ReceiveSlot(FInventorySlot& SourceSlot, const FSlotInventoryTransactionRule& Rule, int32 MaxStackSize);
 
 	const FItemModifier* GetConstModifierByType(const FName& ModifierType) const;
 	FItemModifier* GetModifierByType(const FName& ModifierType);
@@ -53,10 +79,6 @@ USTRUCT(BlueprintType)
 struct SLOTBASEDINVENTORYSYSTEM_API FInventoryContent // : public FFastArraySerializer
 {
     GENERATED_USTRUCT_BODY()
-
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
-	TArray<FInventorySlot> Slots;
 
 
 	bool IsValidIndex(int32 Index) const;
@@ -83,6 +105,9 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventoryContent // : public FFastArraySeri
 
 	void RegroupSimilarItemsAtIndex(int32 Index, FContentModificationResult& ModificationResult, int32 MaxStackSize = 255, FInventorySlot* CachedSlotPtr = nullptr);
 
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
+	TArray<FInventorySlot> Slots;
 };
 
 // template<>

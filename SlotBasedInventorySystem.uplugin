@@ -25,6 +25,10 @@
 		{
 			"Name": "LibAmasson",
 			"Enabled": true
+		},
+		{
+			"Name": "StructUtils",
+			"Enabled": true
 		}
 	]
 }
