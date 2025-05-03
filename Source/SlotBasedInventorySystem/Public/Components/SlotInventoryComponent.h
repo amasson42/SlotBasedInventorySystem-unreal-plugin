@@ -28,6 +28,8 @@ public:
 
 	/** Client Request */
 
+	// TODO: Remove requests that should not be triggered by clients
+
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "ClientRequest|Content|Capacity")
 	void Server_RequestSetContentCapacity(int32 NewCapacity);
 

@@ -7,7 +7,7 @@
 #include "SlotInventorySystemStructs.generated.h"
 
 USTRUCT(BlueprintType)
-struct SLOTBASEDINVENTORYSYSTEM_API FSlotInventoryTransactionRule
+struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlotTransactionRule
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -33,10 +33,10 @@ struct SLOTBASEDINVENTORYSYSTEM_API FItemModifier
 {
 	GENERATED_USTRUCT_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemModifier")
 	FName Type;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemModifier")
 	FInstancedStruct Data;
 };
 
@@ -46,13 +46,13 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot // : public FFastArraySeriali
 	GENERATED_USTRUCT_BODY()
 
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Category = "Slot")
 	FName Item;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Category = "Slot")
 	int32 Quantity = 0;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Category = "Slot")
     TArray<FItemModifier> Modifiers;
 
 
@@ -63,10 +63,10 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot // : public FFastArraySeriali
 	void Reset();
 
 	/** Receive a stack of item */
-	bool ReceiveStack(const FName& InItem, int32& InoutQuantity, const FSlotInventoryTransactionRule& Rule, int32 MaxStackSize);
+	bool ReceiveStack(const FName& InItem, int32& InoutQuantity, const FInventorySlotTransactionRule& Rule, int32 MaxStackSize);
 
 	/** Receive another slot */
-	bool ReceiveSlot(FInventorySlot& SourceSlot, const FSlotInventoryTransactionRule& Rule, int32 MaxStackSize);
+	bool ReceiveSlot(FInventorySlot& SourceSlot, const FInventorySlotTransactionRule& Rule, int32 MaxStackSize);
 
 	const FItemModifier* GetConstModifierByType(const FName& ModifierType) const;
 	FItemModifier* GetModifierByType(const FName& ModifierType);
@@ -106,7 +106,7 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventoryContent // : public FFastArraySeri
 	void RegroupSimilarItemsAtIndex(int32 Index, FContentModificationResult& ModificationResult, int32 MaxStackSize = 255, FInventorySlot* CachedSlotPtr = nullptr);
 
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Category = "Content")
 	TArray<FInventorySlot> Slots;
 };
 

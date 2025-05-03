@@ -18,7 +18,7 @@ void FInventorySlot::Reset()
     Modifiers.Reset();
 }
 
-bool FInventorySlot::ReceiveStack(const FName& InItem, int32& InoutQuantity, const FSlotInventoryTransactionRule& Rule, int32 MaxStackSize)
+bool FInventorySlot::ReceiveStack(const FName& InItem, int32& InoutQuantity, const FInventorySlotTransactionRule& Rule, int32 MaxStackSize)
 {
     if (Rule.bOnlyMerge && (Item != InItem || IsEmpty()))
         return false;
@@ -64,18 +64,30 @@ bool FInventorySlot::ReceiveStack(const FName& InItem, int32& InoutQuantity, con
     return true;
 }
 
-bool FInventorySlot::ReceiveSlot(FInventorySlot& SourceSlot, const FSlotInventoryTransactionRule& Rule, int32 MaxStackSize)
+bool FInventorySlot::ReceiveSlot(FInventorySlot& SourceSlot, const FInventorySlotTransactionRule& Rule, int32 MaxStackSize)
 {
     if (this == &SourceSlot)
         return false;
 
-    if (!SourceSlot.Modifiers.IsEmpty() && !IsEmpty())
-        return false;
+    if (SourceSlot.Modifiers.IsEmpty())
+    {
+        if (ReceiveStack(SourceSlot.Item, SourceSlot.Quantity, Rule, MaxStackSize))
+        {
+            if (SourceSlot.Quantity == 0)
+                SourceSlot.Reset();
+            return true;
+        }
+    }
 
-    const bool bModified = ReceiveStack(SourceSlot.Item, SourceSlot.Quantity, Rule, MaxStackSize);
-    if (SourceSlot.Quantity == 0)
-        SourceSlot.Reset();
-    return bModified;
+    if (Rule.bAllowSwap
+        && SourceSlot.Quantity < MaxStackSize
+        && !IsEmpty() && !SourceSlot.IsEmpty())
+    {
+        Swap(*this, SourceSlot);
+        return true;
+    }
+
+    return false;
 }
 
 const FItemModifier* FInventorySlot::GetConstModifierByType(const FName& ModifierType) const
@@ -192,7 +204,7 @@ void FInventoryContent::ReceiveStack(const FName& Item, int32& InoutQuantity, in
         if (bTargetOccupiedSlots && Slot.IsEmpty())
             continue;
 
-        if (Slot.ReceiveStack(Item, InoutQuantity, FSlotInventoryTransactionRule(), MaxStackSize))
+        if (Slot.ReceiveStack(Item, InoutQuantity, FInventorySlotTransactionRule(), MaxStackSize))
         {
             ModificationResult.bModifiedSomething = true;
             if (Slot.IsEmpty())
@@ -209,7 +221,7 @@ bool FInventoryContent::ReceiveSlotAtIndex(FInventorySlot& InoutSlot, int32 Inde
     if (!LocalSlot || LocalSlot == &InoutSlot)
         return false;
 
-    FSlotInventoryTransactionRule Rule;
+    FInventorySlotTransactionRule Rule;
     Rule.MaxTransferQuantity = MaxTransferAmount;
     if (LocalSlot->ReceiveSlot(InoutSlot, Rule, MaxStackSize))
         return true;
@@ -248,7 +260,7 @@ void FInventoryContent::RegroupSimilarItemsAtIndex(int32 Index, FContentModifica
             if (!Slot.Modifiers.IsEmpty())
                 continue;
 
-            bool bMerged = TargetSlot->ReceiveSlot(Slot, FSlotInventoryTransactionRule(), MaxStackSize);
+            bool bMerged = TargetSlot->ReceiveSlot(Slot, FInventorySlotTransactionRule(), MaxStackSize);
             if (bMerged)
             {
                 ModificationResult.bModifiedSomething = true;

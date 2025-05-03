@@ -19,6 +19,13 @@ public:
 
 	USlotInventoryComponentBase();
 
+	/**
+	 * The purpose of the tick function is to trigger an update broadcast only once.
+	 * We can use MarkDirtySlot multiple times in a same tick but they will
+	 * be cached and only broadcast in the next tick all at once.
+	*/
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 	UPROPERTY(BlueprintAssignable)
 	FOnInventoryCapacityChangedSignature OnInventoryCapacityChanged;
 
@@ -99,25 +106,9 @@ protected:
 	void MarkSlotsHaveBeenModified();
 
 
-public:
-
-	/**
-	 * The purpose of the tick function is to trigger an update broadcast only once.
-	 * We can use mark modified content multiple times in a same tick but they will
-	 * be cached and only broadcast in the next tick all at once.
-	*/
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override
-	{
-		Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-		SetComponentTickEnabled(false);
-		BroadcastContentUpdate();
-	}
-
-
 protected:
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Content", meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditAnywhere, Category = "Content", meta = (AllowPrivateAccess = true))
 	FInventoryContent Content;
 
 	TSet<int32> DirtySlots;

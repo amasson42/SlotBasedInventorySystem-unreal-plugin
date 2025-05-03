@@ -6,11 +6,15 @@
 USlotInventoryComponentBase::USlotInventoryComponentBase()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-
-	SetComponentTickEnabled(false);
 }
 
+void USlotInventoryComponentBase::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	SetComponentTickEnabled(false);
+	BroadcastContentUpdate();
+}
 /** Public Content Management */
 
 const FInventoryContent& USlotInventoryComponentBase::GetContent() const
@@ -112,7 +116,7 @@ void USlotInventoryComponentBase::ModifySlotQuantityAtIndex(int32 Index, int32 M
 	if (bAllOrNothing)
 	{
 		Overflow = ModifyAmount;
-		bool bModified = SlotPtr->ReceiveStack(SlotPtr->Item, Overflow, FSlotInventoryTransactionRule(true, true, false, 0), MaxStackSize);
+		bool bModified = SlotPtr->ReceiveStack(SlotPtr->Item, Overflow, FInventorySlotTransactionRule(true, true, false, 0), MaxStackSize);
 		if (bModified)
 		{
 			Overflow = 0;
@@ -124,7 +128,7 @@ void USlotInventoryComponentBase::ModifySlotQuantityAtIndex(int32 Index, int32 M
 	else
 	{
 		Overflow = ModifyAmount;
-		SlotPtr->ReceiveStack(SlotPtr->Item, Overflow, FSlotInventoryTransactionRule(), MaxStackSize);
+		SlotPtr->ReceiveStack(SlotPtr->Item, Overflow, FInventorySlotTransactionRule(), MaxStackSize);
 		if (Overflow != ModifyAmount)
 			MarkDirtySlot(Index);
 	}
