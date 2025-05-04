@@ -81,13 +81,13 @@ public:
 	bool TryModifyContentWithoutOverflow(const TMap<FName, int32>& Items);
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Action")
-	bool DropSlotTowardOtherInventoryAtIndex(int32 SourceIndex, USlotInventoryComponentBase* Destination, int32 DestinationIndex, int32 MaxAmount = 255);
+	bool DropSlotTowardOtherInventoryAtIndex(int32 SourceIndex, USlotInventoryComponentBase* Destination, int32 DestinationIndex, int32 MaxAmount = 0);
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Action")
 	bool DropSlotTowardOtherInventory(int32 SourceIndex, USlotInventoryComponentBase* Destination);
 
 	UFUNCTION(BlueprintCallable, Category = "Content|Action")
-	void RegroupSimilarItemsAtIndex(int32 Index);
+	bool RegroupSimilarItemsAtIndex(int32 Index);
 
 
 protected:

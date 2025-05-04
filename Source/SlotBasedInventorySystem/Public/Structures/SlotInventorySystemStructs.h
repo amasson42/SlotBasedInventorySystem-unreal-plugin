@@ -6,6 +6,7 @@
 #include "InstancedStruct.h"
 #include "SlotInventorySystemStructs.generated.h"
 
+/** Rules set when moving one specific slow around */
 USTRUCT(BlueprintType)
 struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlotTransactionRule
 {
@@ -17,15 +18,34 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlotTransactionRule
 
 	/** If true, the transaction can swap items between source and target slots if needed. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "Transaction")
-	bool bAllowSwap = true;
+	bool bAllowSwap = false;
 
 	/** If true, merging is the only allowed behavior. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "Transaction")
 	bool bOnlyMerge = false;
 
-	/** Maximum number of items allowed to transfer. 0 means no maximum (transfer all possible). */
+	/** Maximum number of items allowed to transfer. 0 means unlimited. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "Transaction")
 	int32 MaxTransferQuantity = 0;
+};
+
+/** Rule set when moving multiple stacks or doing mass transfers (e.g., drag/drop many items). */
+USTRUCT(BlueprintType)
+struct SLOTBASEDINVENTORYSYSTEM_API FInventoryContentTransactionRule
+{
+	GENERATED_USTRUCT_BODY()
+
+	/** If true, the entire transaction must succeed or none of it does (no partial stack moves). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "Transaction")
+	bool bAtomic = false;
+
+	/** If true, prioritize merging items with existing similar stacks where possible. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "Transaction")
+	bool bPreferMerge = true;
+
+	/** If true, allows the destination inventory to internally reorganize/compact contents. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "Transaction")
+	bool bAllowAutoStacking = true;
 };
 
 USTRUCT(BlueprintType)
@@ -59,6 +79,9 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventorySlot // : public FFastArraySeriali
 	/** Is the slot empty */
 	bool IsEmpty() const;
 
+	/** Does the slot have modifiers */
+	bool HasModifiers() const;
+
 	/** Reset the slot to an empty value */
 	void Reset();
 
@@ -86,24 +109,21 @@ struct SLOTBASEDINVENTORYSYSTEM_API FInventoryContent // : public FFastArraySeri
 	FInventorySlot* GetSlotPtrAtIndex(int32 Index);
 	const FInventorySlot* GetSlotConstPtrAtIndex(int32 Index) const;
 
-	using FItemsPack = TMap<FName, int32>;
+	using FItemStacks = TMap<FName, int32>;
 
-	struct FContentModificationResult
+	struct FContentModifications
 	{
-		bool bModifiedSomething = false;
+		TSet<int32> ModifiedSlots;
 		bool bCreatedEmptySlot = false;
-		TSet<int32>* ModifiedSlots = nullptr;
-		FItemsPack* Overflows = nullptr;
-
-		FContentModificationResult(TSet<int32>* InModifiedSlots, FItemsPack* Overflows);
 	};
 
-	void ModifyContent(const FItemsPack& Items, const TMap<FName, int32>& MaxStackSizes, FContentModificationResult& ModificationResult);
+	bool ReceiveStacks(FItemStacks& Stacks, const FInventoryContentTransactionRule& Rule, const TMap<FName, int32>& MaxStackSizes, FContentModifications& OutModifications);
 
-	void ReceiveStack(const FName& Item, int32& InoutQuantity, int32 MaxStackSize, bool bTargetOccupiedSlots, FContentModificationResult& ModificationResult);
-	bool ReceiveSlotAtIndex(FInventorySlot& InoutSlot, int32 Index, int32 MaxStackSize = 255, int32 MaxTransferAmount = 255);
+	bool ReceiveStack(const FName& Item, int32& InoutQuantity, const FInventorySlotTransactionRule& Rule, int32 MaxStackSize, FContentModifications& OutModifications);
+	bool ReceiveSlotAtIndex(FInventorySlot& InoutSlot, int32 Index, const FInventorySlotTransactionRule& Rule, int32 MaxStackSize);
+	bool ReceiveSlot(FInventorySlot& InoutSlot, const FInventoryContentTransactionRule& Rule, int32 MaxStackSize, FContentModifications& OutModifications);
 
-	void RegroupSimilarItemsAtIndex(int32 Index, FContentModificationResult& ModificationResult, int32 MaxStackSize = 255, FInventorySlot* CachedSlotPtr = nullptr);
+	bool RegroupSimilarItemsAtIndex(int32 Index, FContentModifications& OutModifications, int32 MaxStackSize);
 
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, SaveGame, Category = "Content")
